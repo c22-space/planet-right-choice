@@ -1,105 +1,96 @@
 ---
 import Admin from '@/layouts/Admin.astro'
-import { apiGet } from '@/lib/api'
-
-const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
-const adminToken = Astro.cookies.get('admin_token')?.value
-const headers: Record<string, string> = adminToken ? { Cookie: `admin_token=${adminToken}` } : {}
-
-const page = parseInt(Astro.url.searchParams.get('page') ?? '1', 10)
-const domain = Astro.url.searchParams.get('domain') ?? ''
-
-interface DomainSummary { domain: string; detection_count: number; last_detected: string; versions_seen: number }
-interface Detection { id: number; domain: string; product_name: string | null; co2e_kg: number | null; fp_version: string | null; detected_at: string }
-interface DetectionsRes { summary: DomainSummary[]; recent: Detection[]; total: number }
-
-let summary: DomainSummary[] = []
-let recent: Detection[] = []
-let total = 0
-let error = ''
-
-try {
-  const qs = new URLSearchParams({ page: String(page), pageSize: '30' })
-  if (domain) qs.set('domain', domain)
-  const res = await apiGet<DetectionsRes>(`/v1/admin/detections?${qs}`, env, headers)
-  summary = res.summary
-  recent = res.recent
-  total = res.total
-} catch (e) {
-  error = String(e)
-}
 ---
 <Admin title="fp: Detections">
-  <div class="mb-6">
-    <p class="text-sm text-gray-400">{total} domains have sent fp: tags</p>
-  </div>
-
-  {error && (
-    <div class="mb-4 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300">{error}</div>
-  )}
+  <div class="mb-6"><p class="text-sm text-gray-400" id="total-label">Loading…</p></div>
+  <div id="error-box" class="mb-4 hidden rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300"></div>
 
   <div class="grid gap-6 lg:grid-cols-2">
-    <!-- Domain summary table -->
     <div class="overflow-hidden rounded-xl border border-gray-800">
       <div class="border-b border-gray-800 bg-gray-900/60 px-4 py-3">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Domains by detection volume</h2>
       </div>
-      <table class="w-full text-sm bg-gray-900">
-        <tbody class="divide-y divide-gray-800">
-          {summary.map((d) => (
-            <tr class="hover:bg-gray-800/40">
-              <td class="px-4 py-3">
-                <a href={`?domain=${encodeURIComponent(d.domain)}`} class="font-medium text-green-400 hover:text-green-300">
-                  {d.domain}
-                </a>
-                <p class="text-xs text-gray-500">Last: {d.last_detected.slice(0, 10)}</p>
-              </td>
-              <td class="px-4 py-3 text-right">
-                <span class="text-gray-200 font-semibold">{d.detection_count}</span>
-                <p class="text-xs text-gray-500">{d.versions_seen} version{d.versions_seen !== 1 ? 's' : ''}</p>
-              </td>
-            </tr>
-          ))}
-          {summary.length === 0 && (
-            <tr><td colspan="2" class="px-4 py-8 text-center text-sm text-gray-500">No detections yet.</td></tr>
-          )}
-        </tbody>
-      </table>
+      <div id="summary-list" class="bg-gray-900">
+        <div class="py-16 text-center text-sm text-gray-500">Loading…</div>
+      </div>
     </div>
-
-    <!-- Recent detections -->
     <div class="overflow-hidden rounded-xl border border-gray-800">
       <div class="border-b border-gray-800 bg-gray-900/60 px-4 py-3 flex items-center justify-between">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-          {domain ? `Recent from ${domain}` : 'Most recent detections'}
-        </h2>
-        {domain && (
-          <a href="/admin/detections" class="text-xs text-gray-500 hover:text-gray-300">Clear filter</a>
-        )}
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400" id="recent-title">Most recent detections</h2>
+        <a href="/admin/detections" id="clear-filter" class="hidden text-xs text-gray-500 hover:text-gray-300">Clear filter</a>
       </div>
-      <div class="divide-y divide-gray-800 bg-gray-900">
-        {recent.map((r) => (
-          <div class="px-4 py-3">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0">
-                <p class="truncate text-sm text-gray-200">{r.product_name ?? 'Unknown product'}</p>
-                <p class="text-xs text-gray-500">{r.domain} · {r.detected_at.slice(0, 10)}</p>
-              </div>
-              <div class="flex shrink-0 gap-2">
-                {r.co2e_kg != null && (
-                  <span class="rounded bg-green-900/30 px-1.5 py-0.5 text-xs text-green-300">{r.co2e_kg} kg</span>
-                )}
-                {r.fp_version && (
-                  <span class="rounded bg-gray-800 px-1.5 py-0.5 text-xs text-gray-400">v{r.fp_version}</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-        {recent.length === 0 && (
-          <div class="px-4 py-8 text-center text-sm text-gray-500">No recent detections.</div>
-        )}
+      <div id="recent-list" class="bg-gray-900">
+        <div class="py-16 text-center text-sm text-gray-500">Loading…</div>
       </div>
     </div>
   </div>
 </Admin>
+
+<script>
+  import { API_BASE } from '@/lib/config'
+
+  const token = localStorage.getItem('admin_token')
+  if (!token) { window.location.href = '/admin/login'; throw 0 }
+
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+  const domain = new URLSearchParams(location.search).get('domain') ?? ''
+
+  if (domain) {
+    document.getElementById('recent-title')!.textContent = `Recent from ${domain}`
+    document.getElementById('clear-filter')!.classList.remove('hidden')
+  }
+
+  async function load() {
+    try {
+      const qs = new URLSearchParams({ pageSize: '30' })
+      if (domain) qs.set('domain', domain)
+      const res = await fetch(`${API_BASE}/v1/admin/detections?${qs}`, { headers })
+      if (!res.ok) throw new Error(`API error ${res.status}`)
+      type Summary = { domain: string; detection_count: number; last_detected: string; versions_seen: number }
+      type Detection = { id: number; domain: string; product_name: string | null; co2e_kg: number | null; fp_version: string | null; detected_at: string }
+      const data: { summary: Summary[]; recent: Detection[]; total: number } = await res.json()
+
+      document.getElementById('total-label')!.textContent = `${data.total} domains have sent fp: tags`
+
+      document.getElementById('summary-list')!.innerHTML = data.summary.length ? `
+        <table class="w-full text-sm"><tbody class="divide-y divide-gray-800">
+          ${data.summary.map(d => `
+            <tr class="hover:bg-gray-800/40">
+              <td class="px-4 py-3">
+                <a href="?domain=${encodeURIComponent(d.domain)}" class="font-medium text-green-400 hover:text-green-300">${d.domain}</a>
+                <p class="text-xs text-gray-500">Last: ${d.last_detected.slice(0,10)}</p>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <span class="text-gray-200 font-semibold">${d.detection_count}</span>
+                <p class="text-xs text-gray-500">${d.versions_seen} version${d.versions_seen !== 1 ? 's' : ''}</p>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody></table>
+      ` : '<div class="px-4 py-8 text-center text-sm text-gray-500">No detections yet.</div>'
+
+      document.getElementById('recent-list')!.innerHTML = `<div class="divide-y divide-gray-800">
+        ${data.recent.length ? data.recent.map(r => `
+          <div class="px-4 py-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="truncate text-sm text-gray-200">${r.product_name ?? 'Unknown product'}</p>
+                <p class="text-xs text-gray-500">${r.domain} · ${r.detected_at.slice(0,10)}</p>
+              </div>
+              <div class="flex shrink-0 gap-2">
+                ${r.co2e_kg != null ? `<span class="rounded bg-green-900/30 px-1.5 py-0.5 text-xs text-green-300">${r.co2e_kg} kg</span>` : ''}
+                ${r.fp_version ? `<span class="rounded bg-gray-800 px-1.5 py-0.5 text-xs text-gray-400">v${r.fp_version}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('') : '<div class="px-4 py-8 text-center text-sm text-gray-500">No recent detections.</div>'}
+      </div>`
+    } catch (err) {
+      const box = document.getElementById('error-box')!
+      box.textContent = String(err)
+      box.classList.remove('hidden')
+    }
+  }
+
+  load()
+</script>

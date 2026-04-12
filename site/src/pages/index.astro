@@ -1,23 +1,5 @@
 ---
-// SSR — fetch live impact stats on every render
 import Marketing from '@/layouts/Marketing.astro'
-import { apiGet } from '@/lib/api'
-
-interface ImpactTotals {
-  total_events: number
-  total_saving_co2e_kg: number
-  unique_sessions: number
-}
-
-let impactTotals: ImpactTotals = { total_events: 0, total_saving_co2e_kg: 0, unique_sessions: 0 }
-
-try {
-  const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
-  const res = await apiGet<{ totals: ImpactTotals }>('/v1/impact/stats', env)
-  impactTotals = res.totals
-} catch {
-  // Non-fatal — show zeros if API unavailable during build
-}
 ---
 <Marketing title="Shop greener">
   <!-- Hero -->
@@ -127,15 +109,15 @@ try {
       <h2 class="mb-8 text-3xl font-bold">Better Cart users have already saved</h2>
       <div class="grid gap-8 sm:grid-cols-3">
         <div>
-          <p class="text-5xl font-black text-green-300">{impactTotals.total_saving_co2e_kg.toFixed(1)}</p>
+          <p class="text-5xl font-black text-green-300" id="stat-co2e">—</p>
           <p class="mt-2 text-sm text-green-200">kg CO₂e avoided<br />through greener choices</p>
         </div>
         <div>
-          <p class="text-5xl font-black text-green-300">{impactTotals.total_events.toLocaleString()}</p>
+          <p class="text-5xl font-black text-green-300" id="stat-events">—</p>
           <p class="mt-2 text-sm text-green-200">greener alternatives<br />clicked by real shoppers</p>
         </div>
         <div>
-          <p class="text-5xl font-black text-green-300">{impactTotals.unique_sessions.toLocaleString()}</p>
+          <p class="text-5xl font-black text-green-300" id="stat-sessions">—</p>
           <p class="mt-2 text-sm text-green-200">shoppers who made<br />a greener choice</p>
         </div>
       </div>
@@ -230,3 +212,14 @@ try {
     </div>
   </section>
 </Marketing>
+
+<script>
+  import { API_BASE } from '@/lib/config'
+  fetch(`${API_BASE}/v1/impact/stats`).then(r => r.ok ? r.json() : null).then(data => {
+    if (!data?.totals) return
+    const t = data.totals
+    document.getElementById('stat-co2e')!.textContent = t.total_saving_co2e_kg.toFixed(1)
+    document.getElementById('stat-events')!.textContent = t.total_events.toLocaleString()
+    document.getElementById('stat-sessions')!.textContent = t.unique_sessions.toLocaleString()
+  }).catch(() => {})
+</script>

@@ -2,21 +2,6 @@
 import Base from './Base.astro'
 interface Props { title: string }
 const { title } = Astro.props
-const pathname = Astro.url.pathname
-
-const nav = [
-  { href: '/admin', label: 'Overview', icon: '▣' },
-  { href: '/admin/catalogue', label: 'Catalogue', icon: '⊞' },
-  { href: '/admin/footprints', label: 'Estimations', icon: '〜' },
-  { href: '/admin/detections', label: 'fp: Detections', icon: '◎' },
-  { href: '/admin/affiliate', label: 'Affiliate', icon: '⇀' },
-  { href: '/admin/impact', label: 'Impact', icon: '↓' },
-]
-
-function isActive(href: string) {
-  if (href === '/admin') return pathname === '/admin'
-  return pathname.startsWith(href)
-}
 ---
 <Base title={`Admin — ${title}`}>
   <div class="flex min-h-screen bg-gray-950 text-gray-100">
@@ -26,15 +11,19 @@ function isActive(href: string) {
         <span>Better Cart</span>
         <span class="rounded bg-green-900/60 px-1.5 py-0.5 text-xs text-green-300">admin</span>
       </a>
-      <nav class="flex flex-col gap-1">
-        {nav.map(({ href, label, icon }) => (
+      <nav class="flex flex-col gap-1" id="admin-nav">
+        {[
+          { href: '/admin/', label: 'Overview', icon: '▣' },
+          { href: '/admin/catalogue', label: 'Catalogue', icon: '⊞' },
+          { href: '/admin/footprints', label: 'Estimations', icon: '〜' },
+          { href: '/admin/detections', label: 'fp: Detections', icon: '◎' },
+          { href: '/admin/affiliate', label: 'Affiliate', icon: '⇀' },
+          { href: '/admin/impact', label: 'Impact', icon: '↓' },
+        ].map(({ href, label, icon }) => (
           <a
             href={href}
-            class={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
-              isActive(href)
-                ? 'bg-green-900/50 text-green-300 font-medium'
-                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-            }`}
+            class="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+            data-nav-href={href}
           >
             <span class="text-base leading-none">{icon}</span>
             {label}
@@ -42,11 +31,9 @@ function isActive(href: string) {
         ))}
       </nav>
       <div class="mt-auto">
-        <form method="POST" action="/admin/logout">
-          <button class="w-full rounded-md px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-800 hover:text-gray-300">
-            Sign out
-          </button>
-        </form>
+        <button id="signout-btn" class="w-full rounded-md px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-800 hover:text-gray-300">
+          Sign out
+        </button>
       </div>
     </aside>
 
@@ -61,3 +48,29 @@ function isActive(href: string) {
     </div>
   </div>
 </Base>
+
+<script>
+  const path = window.location.pathname.replace(/\/$/, '') || '/admin'
+
+  // Highlight active nav link
+  document.querySelectorAll('[data-nav-href]').forEach((el) => {
+    const href = (el as HTMLAnchorElement).dataset.navHref!.replace(/\/$/, '') || '/admin'
+    const isActive = href === '/admin' ? path === '/admin' : path.startsWith(href)
+    if (isActive) {
+      el.classList.add('bg-green-900/50', 'text-green-300', 'font-medium')
+      el.classList.remove('text-gray-400')
+    }
+  })
+
+  // Auth guard
+  const token = localStorage.getItem('admin_token')
+  if (!token && !window.location.pathname.includes('/admin/login')) {
+    window.location.href = '/admin/login'
+  }
+
+  // Sign out
+  document.getElementById('signout-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('admin_token')
+    window.location.href = '/admin/login'
+  })
+</script>

@@ -50,7 +50,7 @@ pub async fn login(mut req: Request, ctx: RouteContext<()>) -> Result<Response> 
 
     let token = sign_admin_jwt(&payload, &secret)?;
 
-    let mut resp = Response::from_json(&json!({ "ok": true }))?;
+    let mut resp = Response::from_json(&json!({ "ok": true, "token": token }))?;
     resp.headers_mut().set(
         "Set-Cookie",
         &format!("admin_token={token}; HttpOnly; Secure; SameSite=Strict; Max-Age=28800; Path=/"),

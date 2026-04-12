@@ -1,118 +1,92 @@
 ---
 import Admin from '@/layouts/Admin.astro'
-import { apiGet } from '@/lib/api'
-
-const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
-const adminToken = Astro.cookies.get('admin_token')?.value
-const headers: Record<string, string> = adminToken ? { Cookie: `admin_token=${adminToken}` } : {}
-
-const page = parseInt(Astro.url.searchParams.get('page') ?? '1', 10)
-
-interface Product {
-  id: number; name: string; brand: string; co2e_kg: number | null
-  co2e_source: string | null; is_active: number; category_id: number
-  co2e_confidence: number | null; origin_country: string | null
-}
-interface CatalogueRes { data: Product[]; total: number; page: number; pageSize: number }
-
-let products: Product[] = []
-let total = 0
-let error = ''
-
-try {
-  const res = await apiGet<CatalogueRes>(
-    `/v1/admin/catalogue/products?page=${page}&pageSize=50&includeInactive=true`,
-    env, headers,
-  )
-  products = res.data
-  total = res.total
-} catch (e) {
-  error = String(e)
-}
-
-const totalPages = Math.ceil(total / 50)
-
-function sourceBadge(source: string | null) {
-  const map: Record<string, string> = {
-    fp_tag: 'bg-green-900/40 text-green-300',
-    certified: 'bg-blue-900/40 text-blue-300',
-    manual: 'bg-purple-900/40 text-purple-300',
-    estimated: 'bg-yellow-900/40 text-yellow-300',
-  }
-  return map[source ?? ''] ?? 'bg-gray-800 text-gray-400'
-}
 ---
 <Admin title="Product Catalogue">
   <div class="mb-6 flex items-center justify-between">
-    <p class="text-sm text-gray-400">{total} products total</p>
-    <a href="/admin/catalogue/new" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
-      + Add product
-    </a>
+    <p class="text-sm text-gray-400" id="total-label">Loading…</p>
+    <a href="/admin/catalogue/new" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">+ Add product</a>
   </div>
 
-  {error && (
-    <div class="mb-4 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300">{error}</div>
-  )}
+  <div id="error-box" class="mb-4 hidden rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300"></div>
 
-  <div class="overflow-hidden rounded-xl border border-gray-800">
-    <table class="w-full text-sm">
-      <thead class="border-b border-gray-800 bg-gray-900/60">
-        <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-          <th class="px-4 py-3">Product</th>
-          <th class="px-4 py-3">Brand</th>
-          <th class="px-4 py-3">CO₂e (kg)</th>
-          <th class="px-4 py-3">Source</th>
-          <th class="px-4 py-3">Origin</th>
-          <th class="px-4 py-3">Status</th>
-          <th class="px-4 py-3"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-800 bg-gray-900">
-        {products.map((p) => (
-          <tr class="hover:bg-gray-800/40">
-            <td class="px-4 py-3 font-medium text-gray-200">{p.name}</td>
-            <td class="px-4 py-3 text-gray-400">{p.brand}</td>
-            <td class="px-4 py-3 text-gray-300">
-              {p.co2e_kg != null ? (
-                <span>{p.co2e_kg} <span class="text-gray-500 text-xs">kg</span></span>
-              ) : (
-                <span class="text-gray-600">—</span>
-              )}
-            </td>
-            <td class="px-4 py-3">
-              {p.co2e_source && (
-                <span class={`rounded-full px-2 py-0.5 text-xs font-medium ${sourceBadge(p.co2e_source)}`}>
-                  {p.co2e_source}
-                </span>
-              )}
-            </td>
-            <td class="px-4 py-3 text-gray-400">{p.origin_country ?? '—'}</td>
-            <td class="px-4 py-3">
-              <span class={`rounded-full px-2 py-0.5 text-xs font-medium ${p.is_active ? 'bg-green-900/40 text-green-300' : 'bg-gray-800 text-gray-500'}`}>
-                {p.is_active ? 'Active' : 'Inactive'}
-              </span>
-            </td>
-            <td class="px-4 py-3">
-              <a href={`/admin/catalogue/${p.id}`} class="text-xs text-green-400 hover:text-green-300">Edit</a>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+  <div class="overflow-hidden rounded-xl border border-gray-800" id="table-wrap">
+    <div class="py-16 text-center text-sm text-gray-500">Loading products…</div>
   </div>
 
-  <!-- Pagination -->
-  {totalPages > 1 && (
-    <div class="mt-4 flex items-center justify-between text-sm text-gray-400">
-      <span>Page {page} of {totalPages}</span>
-      <div class="flex gap-2">
-        {page > 1 && (
-          <a href={`?page=${page - 1}`} class="rounded-lg border border-gray-700 px-3 py-1.5 hover:border-gray-600">← Prev</a>
-        )}
-        {page < totalPages && (
-          <a href={`?page=${page + 1}`} class="rounded-lg border border-gray-700 px-3 py-1.5 hover:border-gray-600">Next →</a>
-        )}
-      </div>
-    </div>
-  )}
+  <div class="mt-4 flex items-center justify-between text-sm text-gray-400" id="pagination"></div>
 </Admin>
+
+<script>
+  import { API_BASE } from '@/lib/config'
+
+  const token = localStorage.getItem('admin_token')
+  if (!token) { window.location.href = '/admin/login'; throw 0 }
+
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+
+  let currentPage = parseInt(new URLSearchParams(location.search).get('page') ?? '1', 10)
+
+  const sourceBadge = (s: string | null) => {
+    const m: Record<string, string> = {
+      fp_tag: 'bg-green-900/40 text-green-300',
+      certified: 'bg-blue-900/40 text-blue-300',
+      manual: 'bg-purple-900/40 text-purple-300',
+      estimated: 'bg-yellow-900/40 text-yellow-300',
+    }
+    return m[s ?? ''] ?? 'bg-gray-800 text-gray-400'
+  }
+
+  async function load(page: number) {
+    try {
+      const res = await fetch(`${API_BASE}/v1/admin/catalogue/products?page=${page}&pageSize=50&includeInactive=true`, { headers })
+      if (!res.ok) throw new Error(`API error ${res.status}`)
+      type Product = { id: number; name: string; brand: string; co2e_kg: number | null; co2e_source: string | null; is_active: number; origin_country: string | null }
+      const { data, total }: { data: Product[]; total: number } = await res.json()
+      const totalPages = Math.ceil(total / 50)
+
+      document.getElementById('total-label')!.textContent = `${total} products total`
+      document.getElementById('table-wrap')!.innerHTML = `
+        <table class="w-full text-sm">
+          <thead class="border-b border-gray-800 bg-gray-900/60">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th class="px-4 py-3">Product</th><th class="px-4 py-3">Brand</th>
+              <th class="px-4 py-3">CO₂e (kg)</th><th class="px-4 py-3">Source</th>
+              <th class="px-4 py-3">Origin</th><th class="px-4 py-3">Status</th><th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800 bg-gray-900">
+            ${data.map(p => `
+              <tr class="hover:bg-gray-800/40">
+                <td class="px-4 py-3 font-medium text-gray-200">${p.name}</td>
+                <td class="px-4 py-3 text-gray-400">${p.brand ?? '—'}</td>
+                <td class="px-4 py-3 text-gray-300">${p.co2e_kg != null ? `${p.co2e_kg} <span class="text-gray-500 text-xs">kg</span>` : '<span class="text-gray-600">—</span>'}</td>
+                <td class="px-4 py-3">${p.co2e_source ? `<span class="rounded-full px-2 py-0.5 text-xs font-medium ${sourceBadge(p.co2e_source)}">${p.co2e_source}</span>` : ''}</td>
+                <td class="px-4 py-3 text-gray-400">${p.origin_country ?? '—'}</td>
+                <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-medium ${p.is_active ? 'bg-green-900/40 text-green-300' : 'bg-gray-800 text-gray-500'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
+                <td class="px-4 py-3"><a href="/admin/catalogue/${p.id}" class="text-xs text-green-400 hover:text-green-300">Edit</a></td>
+              </tr>
+            `).join('')}
+            ${data.length === 0 ? '<tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500">No products yet.</td></tr>' : ''}
+          </tbody>
+        </table>
+      `
+
+      const pag = document.getElementById('pagination')!
+      if (totalPages > 1) {
+        pag.innerHTML = `
+          <span>Page ${page} of ${totalPages}</span>
+          <div class="flex gap-2">
+            ${page > 1 ? `<a href="?page=${page-1}" class="rounded-lg border border-gray-700 px-3 py-1.5 hover:border-gray-600">← Prev</a>` : ''}
+            ${page < totalPages ? `<a href="?page=${page+1}" class="rounded-lg border border-gray-700 px-3 py-1.5 hover:border-gray-600">Next →</a>` : ''}
+          </div>
+        `
+      }
+    } catch (err) {
+      const box = document.getElementById('error-box')!
+      box.textContent = String(err)
+      box.classList.remove('hidden')
+    }
+  }
+
+  load(currentPage)
+</script>

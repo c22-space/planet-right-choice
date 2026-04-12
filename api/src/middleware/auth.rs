@@ -18,6 +18,13 @@ pub fn verify_admin(req: &Request, env: &Env) -> Result<bool> {
         return Ok(true);
     }
 
+    // Accept Authorization: Bearer <token>
+    let auth_header = req.headers().get("Authorization")?.unwrap_or_default();
+    if let Some(bearer) = auth_header.strip_prefix("Bearer ") {
+        let secret = env.secret("ADMIN_JWT_SECRET")?.to_string();
+        return verify_jwt(bearer, &secret);
+    }
+
     // Fall back to our own cookie-based JWT
     let cookie_header = req.headers().get("Cookie")?.unwrap_or_default();
     let token = extract_cookie_value(&cookie_header, "admin_token");

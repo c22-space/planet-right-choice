@@ -10,6 +10,7 @@ command = "cargo install worker-build && worker-build --release"
 binding = "DB"
 database_name = "better-cart"
 database_id = "b47e8465-9984-4d34-a1c2-f6b35d53425d"
+migrations_dir = "src/migrations"
 
 [[r2_buckets]]
 binding = "ASSETS"
