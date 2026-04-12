@@ -71,7 +71,7 @@ pub async fn by_asin(req: Request, ctx: RouteContext<()>) -> Result<Response> {
         return Ok(r);
     }
 
-    let asin = ctx.param("asin").unwrap_or("").to_string();
+    let asin = ctx.param("asin").map_or("", |v| v).to_string();
     let db = ctx.env.d1("DB")?;
 
     let product = db
