@@ -1,4 +1,4 @@
-use worker::{Env, Request, Response, Result, RouteContext};
+use worker::{Request, Response, Result, RouteContext};
 use serde_json::json;
 
 pub async fn handle(_req: Request, ctx: RouteContext<()>) -> Result<Response> {

@@ -34,8 +34,9 @@ pub async fn login(mut req: Request, ctx: RouteContext<()>) -> Result<Response> 
     }
 
     // Update last login
+    let user_id = user["id"].as_i64().unwrap_or(0);
     db.prepare("UPDATE admin_users SET last_login_at = datetime('now') WHERE id = ?1")
-        .bind(&[user["id"].clone()])?
+        .bind(&[user_id.into()])?
         .run()
         .await?;
 

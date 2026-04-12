@@ -1,9 +1,9 @@
 use crate::middleware::auth::api_key_required;
-use crate::services::estimation::{estimate, EstimationInput};
+use crate::services::estimation::{estimate as run_estimate, EstimationInput};
 use fp_parser::scan_html;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::json;
-use worker::{Env, Request, Response, Result, RouteContext};
+use worker::{Request, Response, Result, RouteContext};
 
 #[derive(Deserialize)]
 struct ParseBody {
@@ -67,19 +67,23 @@ pub async fn estimate(mut req: Request, ctx: RouteContext<()>) -> Result<Respons
     }
 
     let body: EstimateBody = req.json().await?;
-    let result = estimate(body.signals);
+    let result = run_estimate(body.signals);
 
     Response::from_json(&json!({ "result": result }))
 }
 
 pub async fn get_product_footprint(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
-    let id: i64 = ctx.param("product_id")
+    let id: i64 = ctx
+        .param("product_id")
         .and_then(|s| s.parse().ok())
         .ok_or_else(|| worker::Error::RustError("invalid product_id".into()))?;
 
     let db = ctx.env.d1("DB")?;
     let row = db
-        .prepare("SELECT id, name, brand, co2e_kg, co2e_scope, co2e_source, co2e_confidence FROM products WHERE id = ?1 AND is_active = 1")
+        .prepare(
+            "SELECT id, name, brand, co2e_kg, co2e_scope, co2e_source, co2e_confidence
+             FROM products WHERE id = ?1 AND is_active = 1",
+        )
         .bind(&[id.into()])?
         .first::<serde_json::Value>(None)
         .await?;
