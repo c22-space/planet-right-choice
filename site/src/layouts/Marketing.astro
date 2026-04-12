@@ -1,0 +1,48 @@
+---
+import Base from './Base.astro'
+interface Props { title: string; description?: string }
+const { title, description } = Astro.props
+---
+<Base title={title} description={description}>
+  <header class="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <a href="/" class="flex items-center gap-2 font-semibold text-green-700">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-green-600">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="2" fill="currentColor"/>
+        </svg>
+        Better Cart
+      </a>
+      <nav class="hidden gap-8 text-sm font-medium text-gray-600 md:flex">
+        <a href="/how-it-works" class="hover:text-gray-900">How it works</a>
+        <a href="/catalogue" class="hover:text-gray-900">Catalogue</a>
+        <a href="https://footprint.c22.foundation/" target="_blank" rel="noopener" class="hover:text-gray-900">Footprint Protocol</a>
+      </nav>
+      <a
+        href="/install"
+        class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+      >
+        Install extension
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <slot />
+  </main>
+
+  <footer class="border-t border-gray-100 bg-gray-50 py-12">
+    <div class="mx-auto max-w-6xl px-6">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <p class="text-sm text-gray-500">
+          © {new Date().getFullYear()} Better Cart. Built for the planet.
+        </p>
+        <div class="flex gap-6 text-sm text-gray-500">
+          <a href="https://footprint.c22.foundation/" target="_blank" rel="noopener" class="hover:text-gray-700">Footprint Protocol</a>
+          <a href="/admin/login" class="hover:text-gray-700">Admin</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</Base>

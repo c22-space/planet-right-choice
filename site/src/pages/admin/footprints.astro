@@ -1,0 +1,128 @@
+---
+import Admin from '@/layouts/Admin.astro'
+import { apiGet } from '@/lib/api'
+
+const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
+const adminToken = Astro.cookies.get('admin_token')?.value
+const headers: Record<string, string> = adminToken ? { Cookie: `admin_token=${adminToken}` } : {}
+
+const page = parseInt(Astro.url.searchParams.get('page') ?? '1', 10)
+const tier = Astro.url.searchParams.get('tier') ?? ''
+
+interface Estimation {
+  id: number; domain: string; product_name: string | null
+  estimated_co2e_kg: number; confidence: number; tier: number
+  method_version: string; created_at: string
+  category_slug: string | null; category_name: string | null
+}
+interface TierStat { tier: number; count: number; avg_confidence: number }
+interface EstimationsRes { data: Estimation[]; total: number; tierStats: TierStat[]; page: number }
+
+let data: Estimation[] = []
+let total = 0
+let tierStats: TierStat[] = []
+let error = ''
+
+try {
+  const qs = new URLSearchParams({ page: String(page), pageSize: '50' })
+  if (tier) qs.set('tier', tier)
+  const res = await apiGet<EstimationsRes>(`/v1/admin/estimations?${qs}`, env, headers)
+  data = res.data
+  total = res.total
+  tierStats = res.tierStats
+} catch (e) {
+  error = String(e)
+}
+
+const totalPages = Math.ceil(total / 50)
+
+const tierColor = (t: number) =>
+  t === 1 ? 'bg-green-900/40 text-green-300'
+  : t === 2 ? 'bg-yellow-900/40 text-yellow-300'
+  : 'bg-red-900/40 text-red-300'
+---
+<Admin title="Estimations">
+  <!-- Tier filter pills -->
+  <div class="mb-6 flex flex-wrap items-center gap-3">
+    <span class="text-sm text-gray-400">{total} total</span>
+    <div class="flex gap-2">
+      <a href="/admin/footprints" class={`rounded-full px-3 py-1 text-xs font-medium ${!tier ? 'bg-green-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>All</a>
+      {[1, 2, 3].map((t) => (
+        <a href={`?tier=${t}`} class={`rounded-full px-3 py-1 text-xs font-medium ${tier === String(t) ? 'bg-green-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+          Tier {t}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <!-- Tier confidence bars -->
+  <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    {tierStats.map((t) => (
+      <div class="rounded-xl border border-gray-800 bg-gray-900 p-4">
+        <div class="mb-2 flex items-center justify-between">
+          <span class={`rounded-full px-2 py-0.5 text-xs font-bold ${tierColor(t.tier)}`}>Tier {t.tier}</span>
+          <span class="text-xs text-gray-400">{t.count} runs</span>
+        </div>
+        <p class="mb-1 text-xs text-gray-500">Avg confidence</p>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 h-2 rounded-full bg-gray-800">
+            <div class="h-2 rounded-full bg-green-500" style={`width:${(t.avg_confidence * 100).toFixed(0)}%`} />
+          </div>
+          <span class="text-sm font-semibold text-gray-200">{(t.avg_confidence * 100).toFixed(0)}%</span>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {error && (
+    <div class="mb-4 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300">{error}</div>
+  )}
+
+  <div class="overflow-hidden rounded-xl border border-gray-800">
+    <table class="w-full text-sm">
+      <thead class="border-b border-gray-800 bg-gray-900/60">
+        <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <th class="px-4 py-3">Product</th>
+          <th class="px-4 py-3">Domain</th>
+          <th class="px-4 py-3">Category</th>
+          <th class="px-4 py-3">CO₂e</th>
+          <th class="px-4 py-3">Confidence</th>
+          <th class="px-4 py-3">Tier</th>
+          <th class="px-4 py-3">Date</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800 bg-gray-900">
+        {data.map((e) => (
+          <tr class="hover:bg-gray-800/40">
+            <td class="max-w-48 truncate px-4 py-3 font-medium text-gray-200">{e.product_name ?? '—'}</td>
+            <td class="px-4 py-3 text-gray-400 text-xs">{e.domain}</td>
+            <td class="px-4 py-3 text-gray-400 text-xs">{e.category_slug ?? '—'}</td>
+            <td class="px-4 py-3 text-gray-300">{e.estimated_co2e_kg} kg</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-1.5">
+                <div class="w-16 h-1.5 rounded-full bg-gray-800">
+                  <div class="h-1.5 rounded-full bg-green-500" style={`width:${(e.confidence * 100).toFixed(0)}%`} />
+                </div>
+                <span class="text-xs text-gray-400">{(e.confidence * 100).toFixed(0)}%</span>
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              <span class={`rounded-full px-2 py-0.5 text-xs font-bold ${tierColor(e.tier)}`}>T{e.tier}</span>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500">{e.created_at.slice(0, 10)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {totalPages > 1 && (
+    <div class="mt-4 flex items-center justify-between text-sm text-gray-400">
+      <span>Page {page} of {totalPages}</span>
+      <div class="flex gap-2">
+        {page > 1 && <a href={`?page=${page - 1}${tier ? `&tier=${tier}` : ''}`} class="rounded-lg border border-gray-700 px-3 py-1.5 hover:border-gray-600">← Prev</a>}
+        {page < totalPages && <a href={`?page=${page + 1}${tier ? `&tier=${tier}` : ''}`} class="rounded-lg border border-gray-700 px-3 py-1.5 hover:border-gray-600">Next →</a>}
+      </div>
+    </div>
+  )}
+</Admin>

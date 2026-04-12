@@ -1,0 +1,67 @@
+---
+import Base from '@/layouts/Base.astro'
+import { apiPost } from '@/lib/api'
+
+let error = ''
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData()
+  const email = form.get('email')?.toString() ?? ''
+  const password = form.get('password')?.toString() ?? ''
+
+  try {
+    const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
+    const res = await apiPost<{ ok: boolean }>('/v1/admin/auth/login', { email, password }, env)
+    if (res.ok) {
+      return Astro.redirect('/admin')
+    }
+  } catch {
+    error = 'Invalid email or password.'
+  }
+}
+---
+<Base title="Admin Login">
+  <div class="flex min-h-screen items-center justify-center bg-gray-950 px-4">
+    <div class="w-full max-w-sm">
+      <div class="mb-8 text-center">
+        <p class="text-lg font-bold text-green-400">Better Cart</p>
+        <p class="text-sm text-gray-500">Admin portal</p>
+      </div>
+
+      <form method="POST" class="space-y-4">
+        {error && (
+          <div class="rounded-lg bg-red-900/30 border border-red-800 px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            class="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-2.5 text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            placeholder="you@example.com"
+          />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            class="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-2.5 text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full rounded-lg bg-green-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+        >
+          Sign in
+        </button>
+      </form>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,26 @@
+name = "better-cart-api"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[build]
+command = "cargo install worker-build && worker-build --release"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "better-cart"
+database_id = "placeholder-run-wrangler-d1-create"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "better-cart-assets"
+
+[vars]
+AFFILIATE_TAG = "bettercart-21"
+ENVIRONMENT = "development"
+
+[env.production]
+name = "better-cart-api-production"
+[env.production.vars]
+AFFILIATE_TAG = "bettercart-21"
+ENVIRONMENT = "production"

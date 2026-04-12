@@ -1,0 +1,23 @@
+[package]
+name = "better-cart-api"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+worker = { version = "0.4", features = ["d1", "http", "router"] }
+fp-parser = { path = "../packages/fp-parser" }
+estimation-engine = { path = "../packages/estimation-engine" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+hmac = "0.12"
+sha2 = { version = "0.10", default-features = false, features = ["oid"] }
+hex = "0.4"
+console_error_panic_hook = "0.1"
+
+[profile.release]
+opt-level = "s" # optimize for size — Workers have a 1MB compressed limit
+lto = true

@@ -1,0 +1,232 @@
+---
+// SSR — fetch live impact stats on every render
+import Marketing from '@/layouts/Marketing.astro'
+import { apiGet } from '@/lib/api'
+
+interface ImpactTotals {
+  total_events: number
+  total_saving_co2e_kg: number
+  unique_sessions: number
+}
+
+let impactTotals: ImpactTotals = { total_events: 0, total_saving_co2e_kg: 0, unique_sessions: 0 }
+
+try {
+  const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
+  const res = await apiGet<{ totals: ImpactTotals }>('/v1/impact/stats', env)
+  impactTotals = res.totals
+} catch {
+  // Non-fatal — show zeros if API unavailable during build
+}
+---
+<Marketing title="Shop greener">
+  <!-- Hero -->
+  <section class="bg-gradient-to-b from-green-50 to-white px-6 py-24 text-center">
+    <div class="mx-auto max-w-3xl">
+      <span class="mb-4 inline-block rounded-full bg-green-100 px-4 py-1.5 text-sm font-medium text-green-700">
+        Free browser extension
+      </span>
+      <h1 class="mb-6 text-5xl font-bold leading-tight tracking-tight text-gray-900">
+        See the carbon cost of<br />what you buy
+      </h1>
+      <p class="mb-10 text-xl leading-relaxed text-gray-600">
+        Better Cart reads product pages and surfaces the CO₂ footprint of what you're buying —
+        then suggests greener alternatives. Works on any site. Free.
+      </p>
+      <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <a
+          href="/install"
+          class="rounded-xl bg-green-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg hover:bg-green-700"
+        >
+          Add to Chrome — it's free
+        </a>
+        <a href="/how-it-works" class="text-base font-medium text-gray-600 hover:text-gray-900">
+          How does it work? →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="px-6 py-20">
+    <div class="mx-auto max-w-5xl">
+      <h2 class="mb-12 text-center text-3xl font-bold text-gray-900">Three steps, zero effort</h2>
+      <div class="grid gap-8 md:grid-cols-3">
+        {[
+          {
+            step: '1',
+            title: 'Install once',
+            body: 'Add Better Cart to Chrome or Firefox in one click. No account required.',
+          },
+          {
+            step: '2',
+            title: 'Browse normally',
+            body: 'When you visit a product page, Better Cart detects the carbon footprint automatically.',
+          },
+          {
+            step: '3',
+            title: 'See greener options',
+            body: 'A banner shows the CO₂e score and up to 3 lower-footprint alternatives.',
+          },
+        ].map(({ step, title, body }) => (
+          <div class="rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
+              {step}
+            </div>
+            <h3 class="mb-2 text-lg font-semibold text-gray-900">{title}</h3>
+            <p class="text-gray-600">{body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Footprint detection vs estimation -->
+  <section class="bg-gray-50 px-6 py-20">
+    <div class="mx-auto max-w-5xl">
+      <div class="grid items-center gap-12 md:grid-cols-2">
+        <div>
+          <h2 class="mb-4 text-3xl font-bold text-gray-900">Always a score, never a guess</h2>
+          <p class="mb-6 text-gray-600 leading-relaxed">
+            When a product carries verified <a href="https://footprint.c22.foundation/" target="_blank" class="font-medium text-green-700 underline underline-offset-2">Footprint Protocol</a> tags,
+            Better Cart reads the exact lifecycle CO₂e. When it doesn't, our standardised three-tier
+            estimation protocol derives a best-guess from material composition, product weight, and origin signals.
+          </p>
+          <p class="text-sm text-gray-500">
+            Every score shows its source: <span class="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">Verified</span> for tagged products,
+            <span class="rounded bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-700">Estimated Tier 1/2/3</span> for everything else.
+          </p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <!-- Mock banner preview -->
+          <div class="mb-4 rounded-xl border border-green-100 bg-green-50 p-4">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-semibold text-gray-800">Fairphone 5</span>
+              <span class="rounded-full bg-green-600 px-2.5 py-0.5 text-xs font-bold text-white">Verified</span>
+            </div>
+            <p class="mb-1 text-2xl font-bold text-green-700">29.4 kg CO₂e</p>
+            <p class="text-xs text-gray-500">Lifecycle · 30% below category average</p>
+          </div>
+          <div class="rounded-xl border border-gray-100 bg-gray-50 p-4 opacity-70">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-semibold text-gray-800">Generic Phone</span>
+              <span class="rounded-full bg-yellow-400 px-2.5 py-0.5 text-xs font-bold text-gray-800">Estimated T2</span>
+            </div>
+            <p class="mb-1 text-2xl font-bold text-gray-700">~42 kg CO₂e</p>
+            <p class="text-xs text-gray-500">Weight-scaled category average</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live impact counter -->
+  <section class="bg-green-900 px-6 py-16 text-center text-white">
+    <div class="mx-auto max-w-4xl">
+      <p class="mb-2 text-sm font-semibold uppercase tracking-widest text-green-300">Real impact, tracked live</p>
+      <h2 class="mb-8 text-3xl font-bold">Better Cart users have already saved</h2>
+      <div class="grid gap-8 sm:grid-cols-3">
+        <div>
+          <p class="text-5xl font-black text-green-300">{impactTotals.total_saving_co2e_kg.toFixed(1)}</p>
+          <p class="mt-2 text-sm text-green-200">kg CO₂e avoided<br />through greener choices</p>
+        </div>
+        <div>
+          <p class="text-5xl font-black text-green-300">{impactTotals.total_events.toLocaleString()}</p>
+          <p class="mt-2 text-sm text-green-200">greener alternatives<br />clicked by real shoppers</p>
+        </div>
+        <div>
+          <p class="text-5xl font-black text-green-300">{impactTotals.unique_sessions.toLocaleString()}</p>
+          <p class="mt-2 text-sm text-green-200">shoppers who made<br />a greener choice</p>
+        </div>
+      </div>
+      <p class="mt-8 text-xs text-green-400">
+        Impact is measured every time a shopper clicks a recommended alternative.
+        CO₂e saving = baseline footprint − chosen alternative footprint.
+        <a href="/how-it-works" class="underline underline-offset-2">Methodology →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- For Sellers section -->
+  <section class="px-6 py-24 bg-white">
+    <div class="mx-auto max-w-5xl">
+      <div class="rounded-3xl border border-gray-200 bg-gradient-to-br from-green-50 to-earth-50 p-10 shadow-sm">
+        <div class="mb-2 text-sm font-semibold uppercase tracking-widest text-green-600">For sellers</div>
+        <h2 class="mb-4 text-3xl font-bold text-gray-900">Tag your products. Get a verified score.</h2>
+        <p class="mb-8 max-w-2xl text-gray-600 leading-relaxed">
+          Products that carry <a href="https://footprint.c22.foundation/" target="_blank" rel="noopener" class="font-medium text-green-700 underline underline-offset-2">Footprint Protocol</a>
+          meta tags get a verified CO₂e badge — not an estimate. Verified products rank higher in
+          Better Cart's alternatives suggestions and build buyer trust. Add four lines to your product pages to get started.
+        </p>
+
+        <!-- Before / After comparison -->
+        <div class="mb-8 grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Without fp: tags</p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-gray-700">Your product</span>
+              <span class="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">Estimated T2</span>
+            </div>
+            <p class="mt-1 text-lg font-bold text-gray-500">~42 kg CO₂e</p>
+            <p class="mt-1 text-xs text-gray-400">Based on weight × category average</p>
+          </div>
+          <div class="rounded-xl border border-green-200 bg-green-50 p-5">
+            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-green-600">With fp: tags</p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-gray-800">Your product</span>
+              <span class="rounded-full bg-green-600 px-2.5 py-0.5 text-xs font-bold text-white">Verified</span>
+            </div>
+            <p class="mt-1 text-lg font-bold text-green-700">29.4 kg CO₂e</p>
+            <p class="mt-1 text-xs text-gray-500">Exact lifecycle data you provided</p>
+          </div>
+        </div>
+
+        <!-- What sellers get -->
+        <ul class="mb-8 space-y-2 text-sm text-gray-600">
+          {[
+            'Verified badge — buyers see your real data, not a guess',
+            'Higher placement — verified products rank first in alternatives',
+            'Adoption recognition — your domain appears in our open detection registry',
+          ].map((item) => (
+            <li class="flex items-start gap-2">
+              <span class="mt-0.5 text-green-500">✓</span>
+              {item}
+            </li>
+          ))}
+        </ul>
+
+        <!-- Code snippet -->
+        <div class="mb-8 rounded-xl bg-gray-900 p-5">
+          <p class="mb-3 text-xs font-semibold text-gray-400">Add to your &lt;head&gt;</p>
+          <pre class="overflow-x-auto font-mono text-sm text-green-300"><code>{`<meta property="fp:product"   content="Your Product Name" />
+<meta property="fp:co2e"      content="12.4" />
+<meta property="fp:co2e:unit" content="kg" />
+<meta property="fp:scope"     content="lifecycle" />`}</code></pre>
+        </div>
+
+        <a
+          href="https://footprint.c22.foundation/"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700"
+        >
+          Read the Footprint Protocol →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="bg-green-700 px-6 py-20 text-center text-white">
+    <div class="mx-auto max-w-2xl">
+      <h2 class="mb-4 text-3xl font-bold">Start shopping with a conscience</h2>
+      <p class="mb-8 text-green-100">Free. Open source. No data sold. Ever.</p>
+      <a
+        href="/install"
+        class="inline-block rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-green-700 hover:bg-green-50"
+      >
+        Add to Chrome — free
+      </a>
+    </div>
+  </section>
+</Marketing>

@@ -1,0 +1,61 @@
+---
+export const prerender = true
+import Marketing from '@/layouts/Marketing.astro'
+---
+<Marketing title="Install">
+  <div class="mx-auto max-w-3xl px-6 py-24 text-center">
+    <h1 class="mb-4 text-4xl font-bold text-gray-900">Install Better Cart</h1>
+    <p class="mb-12 text-xl text-gray-600">Free. Open source. Available for Chrome and Firefox.</p>
+
+    <div class="grid gap-6 sm:grid-cols-2">
+      <a
+        href="https://chrome.google.com/webstore"
+        target="_blank"
+        rel="noopener"
+        class="flex flex-col items-center gap-4 rounded-2xl border-2 border-green-200 bg-green-50 p-8 hover:border-green-400 hover:bg-green-100 transition-colors"
+      >
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="20" fill="#4285F4"/>
+          <circle cx="24" cy="24" r="10" fill="white"/>
+          <circle cx="24" cy="24" r="6" fill="#4285F4"/>
+        </svg>
+        <div>
+          <p class="text-lg font-bold text-gray-900">Chrome</p>
+          <p class="text-sm text-gray-500">Chrome Web Store</p>
+        </div>
+        <span class="rounded-lg bg-green-600 px-6 py-2.5 text-sm font-semibold text-white">
+          Add to Chrome
+        </span>
+      </a>
+
+      <a
+        href="https://addons.mozilla.org"
+        target="_blank"
+        rel="noopener"
+        class="flex flex-col items-center gap-4 rounded-2xl border-2 border-orange-200 bg-orange-50 p-8 hover:border-orange-400 hover:bg-orange-100 transition-colors"
+      >
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="20" fill="#FF6611"/>
+          <path d="M24 14c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm0 16c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z" fill="white"/>
+        </svg>
+        <div>
+          <p class="text-lg font-bold text-gray-900">Firefox</p>
+          <p class="text-sm text-gray-500">Firefox Add-ons</p>
+        </div>
+        <span class="rounded-lg bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white">
+          Add to Firefox
+        </span>
+      </a>
+    </div>
+
+    <div class="mt-16 rounded-2xl bg-gray-50 p-8 text-left">
+      <h2 class="mb-4 text-xl font-bold text-gray-900">What happens after install?</h2>
+      <ol class="space-y-3 text-gray-600">
+        <li class="flex gap-3"><span class="font-bold text-green-600">1.</span> Browse to any product page</li>
+        <li class="flex gap-3"><span class="font-bold text-green-600">2.</span> Better Cart automatically scans for carbon data</li>
+        <li class="flex gap-3"><span class="font-bold text-green-600">3.</span> A banner appears with the footprint score and greener alternatives</li>
+        <li class="flex gap-3"><span class="font-bold text-green-600">4.</span> On Amazon, your affiliate links are rewritten to support the project</li>
+      </ol>
+    </div>
+  </div>
+</Marketing>

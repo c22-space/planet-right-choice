@@ -1,0 +1,8 @@
+{
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "better-cart@bettercart.earth",
+      "strict_min_version": "109.0"
+    }
+  }
+}

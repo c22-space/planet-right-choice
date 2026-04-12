@@ -1,0 +1,34 @@
+---
+import Marketing from '@/layouts/Marketing.astro'
+---
+<Marketing title="Dashboard">
+  <div class="mx-auto max-w-4xl px-6 py-16">
+    <h1 class="mb-2 text-3xl font-bold text-gray-900">Your impact</h1>
+    <p class="mb-10 text-gray-500">Every time you click a greener alternative, we track the CO₂e you're avoiding.</p>
+
+    <!-- Placeholder cards — populated via hydration from session storage / API in a full implementation -->
+    <div class="grid gap-6 sm:grid-cols-3 mb-10">
+      {[
+        { label: 'CO₂e you\'ve avoided', value: '—', unit: 'kg' },
+        { label: 'Greener choices made', value: '—', unit: 'clicks' },
+        { label: 'Products scanned', value: '—', unit: 'pages' },
+      ].map(({ label, value, unit }) => (
+        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-center">
+          <p class="mb-1 text-sm text-gray-500">{label}</p>
+          <p class="text-4xl font-black text-gray-900">{value}</p>
+          <p class="text-sm text-gray-400">{unit}</p>
+        </div>
+      ))}
+    </div>
+
+    <div class="rounded-2xl border border-gray-100 bg-gray-50 p-8 text-center">
+      <p class="mb-4 text-gray-600">
+        Install the extension to start tracking your personal carbon savings.
+        No account required — your data stays on your device.
+      </p>
+      <a href="/install" class="inline-block rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700">
+        Install Better Cart →
+      </a>
+    </div>
+  </div>
+</Marketing>

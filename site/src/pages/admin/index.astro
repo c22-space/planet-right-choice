@@ -1,0 +1,119 @@
+---
+import Admin from '@/layouts/Admin.astro'
+import { apiGet } from '@/lib/api'
+
+const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
+
+let stats = { detections: 0, estimations: 0, clicks: 0, activeProducts: 0 }
+let recentEstimations: unknown[] = []
+let tierStats: unknown[] = []
+let error = ''
+
+try {
+  const adminToken = Astro.cookies.get('admin_token')?.value
+  const headers: Record<string, string> = adminToken ? { Cookie: `admin_token=${adminToken}` } : {}
+
+  const [detectionsRes, estimationsRes] = await Promise.all([
+    apiGet<{ total: number; summary: unknown[] }>('/v1/admin/detections?pageSize=1', env, headers),
+    apiGet<{ total: number; data: unknown[]; tierStats: unknown[] }>('/v1/admin/estimations?pageSize=5', env, headers),
+  ])
+
+  stats.detections = detectionsRes.total
+  stats.estimations = estimationsRes.total
+  recentEstimations = estimationsRes.data
+  tierStats = estimationsRes.tierStats
+} catch (e) {
+  error = String(e)
+}
+---
+<Admin title="Overview">
+  {error && (
+    <div class="mb-6 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300">
+      {error}
+    </div>
+  )}
+
+  <!-- Stats row -->
+  <div class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {[
+      { label: 'fp: Detections', value: stats.detections, desc: 'all time' },
+      { label: 'Estimations run', value: stats.estimations, desc: 'all time' },
+      { label: 'Affiliate clicks', value: stats.clicks, desc: 'all time' },
+      { label: 'Active products', value: stats.activeProducts, desc: 'in catalogue' },
+    ].map(({ label, value, desc }) => (
+      <div class="rounded-xl border border-gray-800 bg-gray-900 p-5">
+        <p class="mb-1 text-sm text-gray-400">{label}</p>
+        <p class="text-3xl font-bold text-white">{value.toLocaleString()}</p>
+        <p class="mt-1 text-xs text-gray-500">{desc}</p>
+      </div>
+    ))}
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <!-- Estimation tier breakdown -->
+    <div class="rounded-xl border border-gray-800 bg-gray-900 p-6">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Estimation tiers</h2>
+      <div class="space-y-3">
+        {(tierStats as Array<{ tier: number; count: number; avg_confidence: number }>).map((t) => (
+          <div class="flex items-center gap-3">
+            <span class="w-14 rounded-full bg-yellow-900/40 px-2 py-0.5 text-center text-xs font-bold text-yellow-400">
+              Tier {t.tier}
+            </span>
+            <div class="flex-1">
+              <div class="mb-1 flex justify-between text-xs text-gray-400">
+                <span>{t.count} estimations</span>
+                <span>avg conf: {(t.avg_confidence * 100).toFixed(0)}%</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-800">
+                <div
+                  class="h-2 rounded-full bg-green-500"
+                  style={`width: ${Math.min(100, (t.avg_confidence * 100))}%`}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Recent estimations -->
+    <div class="rounded-xl border border-gray-800 bg-gray-900 p-6">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Recent estimations</h2>
+      <div class="space-y-3">
+        {(recentEstimations as Array<{ domain: string; product_name: string; estimated_co2e_kg: number; tier: number; confidence: number }>).map((e) => (
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="truncate text-sm text-gray-200">{e.product_name ?? 'Unknown product'}</p>
+              <p class="text-xs text-gray-500">{e.domain}</p>
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <span class="rounded bg-gray-800 px-1.5 py-0.5 text-xs text-gray-300">
+                {e.estimated_co2e_kg} kg
+              </span>
+              <span class="rounded-full bg-yellow-900/40 px-1.5 py-0.5 text-xs text-yellow-400">
+                T{e.tier}
+              </span>
+            </div>
+          </div>
+        ))}
+        {recentEstimations.length === 0 && (
+          <p class="text-sm text-gray-500">No estimations yet.</p>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {[
+      { href: '/admin/catalogue', label: 'Manage catalogue →' },
+      { href: '/admin/footprints', label: 'View estimations →' },
+      { href: '/admin/detections', label: 'fp: detections →' },
+      { href: '/admin/affiliate', label: 'Affiliate rules →' },
+    ].map(({ href, label }) => (
+      <a href={href} class="rounded-xl border border-gray-800 bg-gray-900 px-5 py-4 text-sm font-medium text-green-400 hover:border-gray-700 hover:bg-gray-800">
+        {label}
+      </a>
+    ))}
+  </div>
+</Admin>

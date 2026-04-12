@@ -1,0 +1,131 @@
+---
+import Admin from '@/layouts/Admin.astro'
+import { apiGet } from '@/lib/api'
+
+const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
+const adminToken = Astro.cookies.get('admin_token')?.value
+const headers: Record<string, string> = adminToken ? { Cookie: `admin_token=${adminToken}` } : {}
+
+const days = parseInt(Astro.url.searchParams.get('days') ?? '30', 10)
+
+interface Totals {
+  total_events: number
+  total_saving_co2e_kg: number
+  unique_sessions: number
+  avg_saving_kg: number
+}
+interface DayStat { date: string; events: number; saving_kg: number }
+interface SourceStat { baseline_source: string; events: number; saving_kg: number }
+interface CatStat { category_slug: string; events: number; saving_kg: number }
+interface ImpactRes { totals: Totals; daily: DayStat[]; bySource: SourceStat[]; byCategory: CatStat[] }
+
+let totals: Totals = { total_events: 0, total_saving_co2e_kg: 0, unique_sessions: 0, avg_saving_kg: 0 }
+let daily: DayStat[] = []
+let bySource: SourceStat[] = []
+let byCategory: CatStat[] = []
+let error = ''
+
+try {
+  const res = await apiGet<ImpactRes>(`/v1/admin/impact?days=${days}`, env, headers)
+  totals = res.totals
+  daily = res.daily
+  bySource = res.bySource
+  byCategory = res.byCategory
+} catch (e) {
+  error = String(e)
+}
+
+const maxSavingKg = Math.max(...daily.map((d) => d.saving_kg), 1)
+---
+<Admin title="Impact">
+  <!-- Period selector -->
+  <div class="mb-6 flex gap-2">
+    {[7, 30, 90].map((d) => (
+      <a
+        href={`?days=${d}`}
+        class={`rounded-lg px-3 py-1.5 text-sm font-medium ${days === d ? 'bg-green-700 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+      >
+        Last {d}d
+      </a>
+    ))}
+  </div>
+
+  {error && (
+    <div class="mb-4 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300">{error}</div>
+  )}
+
+  <!-- Key stats -->
+  <div class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {[
+      { label: 'CO₂e saved', value: `${totals.total_saving_co2e_kg.toFixed(1)} kg`, desc: 'from recommendations' },
+      { label: 'Greener clicks', value: totals.total_events.toLocaleString(), desc: 'alternatives chosen' },
+      { label: 'Avg saving / click', value: `${(totals.avg_saving_kg ?? 0).toFixed(2)} kg`, desc: 'CO₂e per event' },
+      { label: 'Unique sessions', value: totals.unique_sessions.toLocaleString(), desc: 'users who clicked' },
+    ].map(({ label, value, desc }) => (
+      <div class="rounded-xl border border-gray-800 bg-gray-900 p-5">
+        <p class="mb-1 text-sm text-gray-400">{label}</p>
+        <p class="text-2xl font-bold text-green-400">{value}</p>
+        <p class="mt-1 text-xs text-gray-500">{desc}</p>
+      </div>
+    ))}
+  </div>
+
+  <!-- CO2e saved daily chart -->
+  <div class="mb-6 rounded-xl border border-gray-800 bg-gray-900 p-6">
+    <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">CO₂e saved per day</h2>
+    <div class="flex items-end gap-1 h-24">
+      {daily.map((d) => {
+        const h = Math.round((d.saving_kg / maxSavingKg) * 100)
+        return (
+          <div
+            class="flex-1 rounded-sm bg-green-600/70 hover:bg-green-500 transition-colors"
+            style={`height: ${Math.max(h, 2)}%`}
+            title={`${d.date}: ${d.saving_kg.toFixed(2)} kg saved`}
+          />
+        )
+      })}
+      {daily.length === 0 && <p class="text-sm text-gray-500">No impact data yet.</p>}
+    </div>
+    {daily.length > 0 && (
+      <div class="mt-2 flex justify-between text-xs text-gray-600">
+        <span>{daily[0]?.date}</span>
+        <span>{daily[daily.length - 1]?.date}</span>
+      </div>
+    )}
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-2">
+    <!-- By source -->
+    <div class="rounded-xl border border-gray-800 bg-gray-900 p-5">
+      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Savings by baseline source</h2>
+      <p class="mb-3 text-xs text-gray-500">
+        Shows whether savings came from verified fp: tag baselines or estimates — a proxy for data quality.
+      </p>
+      {bySource.map((s) => (
+        <div class="flex items-center justify-between border-t border-gray-800 py-2 first:border-t-0">
+          <span class="text-sm text-gray-300">{s.baseline_source}</span>
+          <div class="text-right">
+            <span class="text-sm font-semibold text-green-400">{s.saving_kg.toFixed(1)} kg</span>
+            <p class="text-xs text-gray-500">{s.events} events</p>
+          </div>
+        </div>
+      ))}
+      {bySource.length === 0 && <p class="text-sm text-gray-500">No data yet.</p>}
+    </div>
+
+    <!-- By category -->
+    <div class="rounded-xl border border-gray-800 bg-gray-900 p-5">
+      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Savings by category</h2>
+      {byCategory.map((c) => (
+        <div class="flex items-center justify-between border-t border-gray-800 py-2 first:border-t-0">
+          <span class="text-sm text-gray-300">{c.category_slug}</span>
+          <div class="text-right">
+            <span class="text-sm font-semibold text-green-400">{c.saving_kg.toFixed(1)} kg</span>
+            <p class="text-xs text-gray-500">{c.events} choices</p>
+          </div>
+        </div>
+      ))}
+      {byCategory.length === 0 && <p class="text-sm text-gray-500">No data yet.</p>}
+    </div>
+  </div>
+</Admin>

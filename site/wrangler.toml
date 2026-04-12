@@ -1,0 +1,15 @@
+name = "better-cart-site"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "better-cart"
+database_id = "placeholder-run-wrangler-d1-create"
+
+[[services]]
+binding = "API_WORKER"
+service = "better-cart-api"
+
+[vars]
+API_BASE = "https://api.bettercart.earth"

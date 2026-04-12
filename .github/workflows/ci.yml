@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PNPM_VERSION: '9'
+  NODE_VERSION: '20'
+  RUST_TOOLCHAIN: 'stable'
+
+jobs:
+  # ── TypeScript packages, extension, site ──────────────────────────────────
+  ts-check:
+    name: TypeScript — typecheck & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm --filter '@better-cart/fp-types' build
+
+      - name: Typecheck — fp-types
+        run: pnpm --filter '@better-cart/fp-types' typecheck
+
+      - name: Typecheck — extension
+        run: pnpm --filter extension typecheck
+
+      - name: Build — extension
+        run: pnpm --filter extension build
+
+      - name: Typecheck — site
+        run: pnpm --filter site typecheck
+
+      - name: Build — site
+        run: pnpm --filter site build
+        env:
+          API_BASE: 'http://localhost:8787'
+
+  # ── Rust workspace ─────────────────────────────────────────────────────────
+  rust-check:
+    name: Rust — check, test, clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check
+        run: cargo check --workspace
+
+      - name: Clippy
+        run: cargo clippy --workspace -- -D warnings
+
+      - name: Test — fp-parser
+        run: cargo test -p fp-parser
+
+      - name: Test — estimation-engine
+        run: cargo test -p estimation-engine
+
+  # ── D1 migration dry-run ────────────────────────────────────────────────────
+  d1-migrate-check:
+    name: D1 migrations dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Validate migration SQL syntax
+        run: |
+          # Install sqlite3 for local validation
+          sudo apt-get install -y sqlite3
+          DB=$(mktemp /tmp/test.XXXXXX.db)
+          for f in api/src/migrations/*.sql; do
+            echo "Applying $f..."
+            sqlite3 "$DB" < "$f"
+          done
+          echo "All migrations applied successfully."

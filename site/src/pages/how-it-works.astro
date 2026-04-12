@@ -1,0 +1,93 @@
+---
+export const prerender = true
+import Marketing from '@/layouts/Marketing.astro'
+---
+<Marketing title="How it works">
+  <div class="mx-auto max-w-3xl px-6 py-24">
+    <h1 class="mb-4 text-4xl font-bold text-gray-900">How Better Cart works</h1>
+    <p class="mb-12 text-xl text-gray-600">Two sources of truth, one seamless experience.</p>
+
+    <div class="space-y-16">
+      <!-- Footprint Protocol -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">A</span>
+          <h2 class="text-2xl font-bold text-gray-900">Footprint Protocol tags (verified)</h2>
+        </div>
+        <p class="mb-4 text-gray-600 leading-relaxed">
+          The <a href="https://footprint.c22.foundation/" target="_blank" rel="noopener" class="font-medium text-green-700 underline underline-offset-2">Footprint Protocol</a>
+          is an open standard that lets brands publish product carbon data directly on their product pages
+          as HTML meta tags. When Better Cart finds these tags, it reads the exact lifecycle CO₂e figure
+          certified by the brand.
+        </p>
+        <div class="rounded-xl bg-gray-900 p-5 font-mono text-sm text-green-300">
+          <pre>{`<meta property="fp:product"   content="Fairphone 5" />
+<meta property="fp:co2e"      content="29.4" />
+<meta property="fp:co2e:unit" content="kg" />
+<meta property="fp:scope"     content="lifecycle" />
+<meta property="fp:certifier" content="PRé Consultants" />`}</pre>
+        </div>
+      </section>
+
+      <!-- Estimation Protocol -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100 text-sm font-bold text-yellow-700">B</span>
+          <h2 class="text-2xl font-bold text-gray-900">Standardised estimation protocol (best-guess)</h2>
+        </div>
+        <p class="mb-6 text-gray-600 leading-relaxed">
+          When no fp: tags are found, Better Cart runs a three-tier estimation protocol based on
+          GHG Protocol Scope 3 Category 1 methodology, ecoinvent 3.x emission factors, Higg MSI 2023
+          data, and US EPA USEEIO v2.1 spend intensities.
+        </p>
+        <div class="space-y-4">
+          {[
+            {
+              tier: 'Tier 1',
+              conf: '65–88%',
+              color: 'yellow',
+              title: 'Material-based hybrid',
+              body: 'Requires weight + material composition signals from the page. CO₂e = Σ(material_mass × emission_factor) × manufacturing_multiplier + transport.',
+            },
+            {
+              tier: 'Tier 2',
+              conf: '40–64%',
+              color: 'orange',
+              title: 'Weight-scaled category average',
+              body: 'Requires product weight. CO₂e = weight_kg × category_intensity (kg CO₂e / kg). Category intensities from ecoinvent 3.9.',
+            },
+            {
+              tier: 'Tier 3',
+              conf: '15–39%',
+              color: 'red',
+              title: 'Spend-based EEIO',
+              body: 'Price × USEEIO v2.1 spend intensity for the product\'s NAICS category. Least accurate but still directionally useful.',
+            },
+          ].map(({ tier, conf, title, body }) => (
+            <div class="rounded-xl border border-gray-100 bg-gray-50 p-5">
+              <div class="mb-2 flex items-center gap-3">
+                <span class="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-bold text-yellow-700">{tier}</span>
+                <span class="text-xs text-gray-400">Confidence: {conf}</span>
+              </div>
+              <h3 class="mb-1 font-semibold text-gray-800">{title}</h3>
+              <p class="text-sm text-gray-600">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- Alternatives matching -->
+      <section>
+        <div class="mb-4 flex items-center gap-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">C</span>
+          <h2 class="text-2xl font-bold text-gray-900">Alternatives matching</h2>
+        </div>
+        <p class="text-gray-600 leading-relaxed">
+          Once a footprint is established (verified or estimated), Better Cart queries its product catalogue
+          for lower-CO₂e alternatives in the same category. Products are ranked by their CO₂e score relative
+          to the category average, and the top 3 greener options are shown in the banner.
+        </p>
+      </section>
+    </div>
+  </div>
+</Marketing>

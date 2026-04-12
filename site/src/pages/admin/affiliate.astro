@@ -1,0 +1,150 @@
+---
+import Admin from '@/layouts/Admin.astro'
+import { apiGet } from '@/lib/api'
+
+const env = (Astro.locals as Record<string, unknown>)['runtime']?.['env']
+const adminToken = Astro.cookies.get('admin_token')?.value
+const headers: Record<string, string> = adminToken ? { Cookie: `admin_token=${adminToken}` } : {}
+
+const tab = Astro.url.searchParams.get('tab') ?? 'rules'
+
+interface Rule { id: number; source_asin: string; target_asin: string | null; affiliate_tag: string; reason: string | null; is_active: number; priority: number }
+interface DayStat { date: string; clicks: number }
+interface TopAsin { source_asin: string; clicks: number }
+interface Revenue { period_start: string; period_end: string; total_clicks: number; total_orders: number; total_revenue: number }
+
+let rules: Rule[] = []
+let rulesTotal = 0
+let daily: DayStat[] = []
+let topAsins: TopAsin[] = []
+let revenue: Revenue[] = []
+let error = ''
+
+try {
+  if (tab === 'rules') {
+    const res = await apiGet<{ rules: Rule[]; total: number }>('/v1/admin/affiliate/rules?includeInactive=true', env, headers)
+    rules = res.rules
+    rulesTotal = res.total
+  } else {
+    const res = await apiGet<{ daily: DayStat[]; topAsins: TopAsin[]; revenue: Revenue[] }>('/v1/admin/affiliate/stats?days=30', env, headers)
+    daily = res.daily
+    topAsins = res.topAsins
+    revenue = res.revenue
+  }
+} catch (e) {
+  error = String(e)
+}
+---
+<Admin title="Affiliate">
+  <!-- Tab switcher -->
+  <div class="mb-6 flex gap-1 rounded-xl bg-gray-900 p-1 w-fit">
+    {(['rules', 'stats'] as const).map((t) => (
+      <a
+        href={`?tab=${t}`}
+        class={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${tab === t ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+      >
+        {t === 'rules' ? 'ASIN Rules' : 'Stats'}
+      </a>
+    ))}
+  </div>
+
+  {error && (
+    <div class="mb-4 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300">{error}</div>
+  )}
+
+  {tab === 'rules' && (
+    <div>
+      <div class="mb-4 flex items-center justify-between">
+        <p class="text-sm text-gray-400">{rulesTotal} rules</p>
+        <a href="/admin/affiliate/new" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+          + Add rule
+        </a>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-gray-800">
+        <table class="w-full text-sm">
+          <thead class="border-b border-gray-800 bg-gray-900/60">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <th class="px-4 py-3">Source ASIN</th>
+              <th class="px-4 py-3">Target ASIN</th>
+              <th class="px-4 py-3">Tag</th>
+              <th class="px-4 py-3">Priority</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Reason</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800 bg-gray-900">
+            {rules.map((r) => (
+              <tr class="hover:bg-gray-800/40">
+                <td class="px-4 py-3 font-mono text-xs text-gray-200">{r.source_asin}</td>
+                <td class="px-4 py-3 font-mono text-xs text-gray-400">{r.target_asin ?? <span class="text-gray-600">—</span>}</td>
+                <td class="px-4 py-3 text-xs text-gray-400">{r.affiliate_tag}</td>
+                <td class="px-4 py-3 text-gray-400">{r.priority}</td>
+                <td class="px-4 py-3">
+                  <span class={`rounded-full px-2 py-0.5 text-xs font-medium ${r.is_active ? 'bg-green-900/40 text-green-300' : 'bg-gray-800 text-gray-500'}`}>
+                    {r.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td class="max-w-32 truncate px-4 py-3 text-xs text-gray-500">{r.reason ?? '—'}</td>
+                <td class="px-4 py-3">
+                  <a href={`/admin/affiliate/${r.id}`} class="text-xs text-green-400 hover:text-green-300">Edit</a>
+                </td>
+              </tr>
+            ))}
+            {rules.length === 0 && (
+              <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500">No rules yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
+
+  {tab === 'stats' && (
+    <div class="space-y-6">
+      <!-- Daily clicks sparkline (ASCII approximation — replace with JS chart in real impl) -->
+      <div class="rounded-xl border border-gray-800 bg-gray-900 p-6">
+        <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400">Daily clicks (last 30 days)</h2>
+        <div class="flex items-end gap-1 h-20">
+          {daily.map((d) => {
+            const max = Math.max(...daily.map((x) => x.clicks), 1)
+            const h = Math.round((d.clicks / max) * 100)
+            return (
+              <div class="flex-1 bg-green-600/60 rounded-sm" style={`height: ${h}%`} title={`${d.date}: ${d.clicks}`} />
+            )
+          })}
+          {daily.length === 0 && <p class="text-sm text-gray-500">No click data yet.</p>}
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <!-- Top ASINs -->
+        <div class="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Top ASINs (30d)</h2>
+          {topAsins.map((a) => (
+            <div class="flex items-center justify-between py-1.5">
+              <span class="font-mono text-xs text-gray-300">{a.source_asin}</span>
+              <span class="text-sm font-semibold text-gray-200">{a.clicks}</span>
+            </div>
+          ))}
+          {topAsins.length === 0 && <p class="text-sm text-gray-500">No data yet.</p>}
+        </div>
+
+        <!-- Revenue snapshots -->
+        <div class="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Revenue snapshots</h2>
+          {revenue.map((r) => (
+            <div class="flex items-center justify-between border-t border-gray-800 py-2 first:border-t-0">
+              <div>
+                <p class="text-xs text-gray-400">{r.period_start} → {r.period_end}</p>
+                <p class="text-xs text-gray-500">{r.total_clicks} clicks · {r.total_orders} orders</p>
+              </div>
+              <span class="text-sm font-semibold text-green-400">${r.total_revenue.toFixed(2)}</span>
+            </div>
+          ))}
+          {revenue.length === 0 && <p class="text-sm text-gray-500">No revenue data yet.</p>}
+        </div>
+      </div>
+    </div>
+  )}
+</Admin>

@@ -1,0 +1,63 @@
+---
+import Base from './Base.astro'
+interface Props { title: string }
+const { title } = Astro.props
+const pathname = Astro.url.pathname
+
+const nav = [
+  { href: '/admin', label: 'Overview', icon: '▣' },
+  { href: '/admin/catalogue', label: 'Catalogue', icon: '⊞' },
+  { href: '/admin/footprints', label: 'Estimations', icon: '〜' },
+  { href: '/admin/detections', label: 'fp: Detections', icon: '◎' },
+  { href: '/admin/affiliate', label: 'Affiliate', icon: '⇀' },
+  { href: '/admin/impact', label: 'Impact', icon: '↓' },
+]
+
+function isActive(href: string) {
+  if (href === '/admin') return pathname === '/admin'
+  return pathname.startsWith(href)
+}
+---
+<Base title={`Admin — ${title}`}>
+  <div class="flex min-h-screen bg-gray-950 text-gray-100">
+    <!-- Sidebar -->
+    <aside class="flex w-56 flex-col border-r border-gray-800 bg-gray-900 p-4">
+      <a href="/" class="mb-8 flex items-center gap-2 text-sm font-semibold text-green-400">
+        <span>Better Cart</span>
+        <span class="rounded bg-green-900/60 px-1.5 py-0.5 text-xs text-green-300">admin</span>
+      </a>
+      <nav class="flex flex-col gap-1">
+        {nav.map(({ href, label, icon }) => (
+          <a
+            href={href}
+            class={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors ${
+              isActive(href)
+                ? 'bg-green-900/50 text-green-300 font-medium'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+            }`}
+          >
+            <span class="text-base leading-none">{icon}</span>
+            {label}
+          </a>
+        ))}
+      </nav>
+      <div class="mt-auto">
+        <form method="POST" action="/admin/logout">
+          <button class="w-full rounded-md px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-800 hover:text-gray-300">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="flex flex-1 flex-col">
+      <header class="border-b border-gray-800 bg-gray-900 px-8 py-4">
+        <h1 class="text-lg font-semibold text-gray-100">{title}</h1>
+      </header>
+      <main class="flex-1 overflow-auto p-8">
+        <slot />
+      </main>
+    </div>
+  </div>
+</Base>
