@@ -1,4 +1,4 @@
-name = "better-cart-api"
+name = "planet-right-api"
 main = "build/worker/shim.mjs"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
@@ -9,7 +9,7 @@ command = "cargo install worker-build && worker-build --release"
 [[d1_databases]]
 binding = "DB"
 database_name = "better-cart"
-database_id = "placeholder-run-wrangler-d1-create"
+database_id = "b47e8465-9984-4d34-a1c2-f6b35d53425d"
 
 [[r2_buckets]]
 binding = "ASSETS"

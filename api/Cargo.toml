@@ -7,7 +7,7 @@ edition.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-worker = { version = "0.4", features = ["d1", "http", "router"] }
+worker = { version = "0.4", features = ["d1", "http"] }
 fp-parser = { path = "../packages/fp-parser" }
 estimation-engine = { path = "../packages/estimation-engine" }
 serde.workspace = true

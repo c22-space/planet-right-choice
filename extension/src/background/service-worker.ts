@@ -62,20 +62,59 @@ chrome.runtime.onMessage.addListener(
 // ── Impact event relay ───────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener(
-  (msg: { type: 'IMPACT_CLICK'; payload: Parameters<typeof postImpactEvent>[0] }) => {
+  (msg: { type: 'IMPACT_CLICK'; payload: Parameters<typeof postImpactEvent>[0] & { alternativeName?: string; productName?: string } }) => {
     if (msg.type === 'IMPACT_CLICK') {
-      postImpactEvent(msg.payload).catch(() => {})
+      const p = msg.payload
+      // Persist locally for the dashboard
+      persistImpactEvent({
+        domain: p.domain,
+        baselineCo2eKg: p.baselineCo2eKg,
+        alternativeCo2eKg: p.alternativeCo2eKg,
+        savingKg: p.baselineCo2eKg - p.alternativeCo2eKg,
+        categorySlug: p.categorySlug ?? null,
+        productName: p.productName ?? null,
+        alternativeName: p.alternativeName ?? null,
+        ts: Date.now(),
+      }).catch(() => {})
+      // Send to API (fire-and-forget)
+      postImpactEvent(p).catch(() => {})
     }
   },
 )
 
+async function persistImpactEvent(event: {
+  domain: string
+  baselineCo2eKg: number
+  alternativeCo2eKg: number
+  savingKg: number
+  categorySlug: string | null
+  productName: string | null
+  alternativeName: string | null
+  ts: number
+}): Promise<void> {
+  const result = await chrome.storage.local.get(['impactEvents'])
+  const events: typeof event[] = (result['impactEvents'] as typeof event[] | undefined) ?? []
+  events.unshift(event)
+  // Keep last 200 events
+  if (events.length > 200) events.length = 200
+  await chrome.storage.local.set({ impactEvents: events })
+}
+
 // ── Handlers ─────────────────────────────────────────────────────────────────
+
+async function incrementScanCount(): Promise<void> {
+  const result = await chrome.storage.local.get(['totalScans'])
+  const n: number = ((result['totalScans'] as number | undefined) ?? 0) + 1
+  await chrome.storage.local.set({ totalScans: n })
+}
 
 async function handleFpDetected(
   tabId: number,
   msg: Extract<ContentToBackground, { type: 'FP_DETECTED' }>,
 ): Promise<void> {
   const { product, signals } = msg
+
+  incrementScanCount().catch(() => {})
 
   // Fire-and-forget: record the detection
   postFpDetection({
@@ -119,6 +158,7 @@ async function handleEstimateRequested(
   tabId: number,
   msg: Extract<ContentToBackground, { type: 'ESTIMATE_REQUESTED' }>,
 ): Promise<void> {
+  incrementScanCount().catch(() => {})
   const { signals } = msg
 
   const result = await postEstimate({

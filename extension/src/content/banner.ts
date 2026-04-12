@@ -244,6 +244,7 @@ function render(shadow: ShadowRoot, data: BannerData): void {
             baselineTier: currentBannerData.baseline.tier,
             alternativeId: alt.product.id,
             categorySlug: alt.product.categorySlug,
+            alternativeName: alt.product.name,
           },
         })
       })
