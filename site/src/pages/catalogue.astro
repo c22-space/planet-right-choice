@@ -6,6 +6,20 @@ import Marketing from '@/layouts/Marketing.astro'
     <div class="mb-8">
       <h1 class="mb-2 text-3xl font-bold text-gray-900">Green catalogue</h1>
       <p class="text-gray-500" id="total-label">Loading products…</p>
+
+      <!-- Search bar -->
+      <form id="search-form" class="mt-4 flex max-w-lg overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100">
+        <input
+          id="search-input"
+          type="text"
+          name="search"
+          placeholder="Search products or brands…"
+          class="flex-1 bg-transparent px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 outline-none"
+        />
+        <button type="submit" class="m-1 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-green-700">
+          Search
+        </button>
+      </form>
     </div>
 
     <div class="flex gap-8">
@@ -42,8 +56,22 @@ import Marketing from '@/layouts/Marketing.astro'
 
   const qs = new URLSearchParams(location.search)
   let category = qs.get('category') ?? ''
+  let search = qs.get('search') ?? ''
   let page = Math.max(1, parseInt(qs.get('page') ?? '1', 10))
   const pageSize = 20
+
+  // Pre-fill search input
+  const searchInput = document.getElementById('search-input') as HTMLInputElement
+  if (search) searchInput.value = search
+
+  document.getElementById('search-form')!.addEventListener('submit', (e) => {
+    e.preventDefault()
+    const q = searchInput.value.trim()
+    const params = new URLSearchParams()
+    if (q) params.set('search', q)
+    if (category) params.set('category', category)
+    window.location.href = `/catalogue?${params}`
+  })
 
   const sourceLabel = (s: string) => (s === 'certified' || s === 'fp_tag') ? 'Verified' : s === 'manual' ? 'Manual' : 'Estimated'
   const sourceBadge = (s: string) => (s === 'certified' || s === 'fp_tag') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
@@ -82,6 +110,7 @@ import Marketing from '@/layouts/Marketing.astro'
     try {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) })
       if (category) params.set('category', category)
+      if (search) params.set('search', search)
       const res = await fetch(`${API_BASE}/v1/catalogue/products?${params}`)
       if (!res.ok) throw new Error(`API error ${res.status}`)
       type Product = { id: number; name: string; brand: string; co2e_kg: number; co2e_source: string; certifications: string | null; url: string | null; image_url: string | null; origin_country: string | null }
@@ -93,7 +122,7 @@ import Marketing from '@/layouts/Marketing.astro'
       document.getElementById('product-grid')!.innerHTML = data.length ? data.map(p => {
         const certs: string[] = (() => { try { return JSON.parse(p.certifications ?? '[]') } catch { return [] } })()
         return `
-          <a href="${p.url ?? '#'}" ${p.url ? 'target="_blank" rel="noopener"' : ''}
+          <a href="/product?id=${p.id}"
             class="group flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-gray-200 hover:shadow-md">
             ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="mb-4 h-32 w-full rounded-xl object-contain bg-gray-50" loading="lazy" />` : ''}
             <p class="mb-0.5 text-xs font-medium uppercase tracking-wider text-gray-400">${p.brand ?? ''}</p>
@@ -114,10 +143,12 @@ import Marketing from '@/layouts/Marketing.astro'
       }).join('') : '<div class="col-span-3 rounded-2xl border border-gray-100 bg-gray-50 py-20 text-center text-gray-400">No products found.</div>'
 
       if (totalPages > 1) {
+        const base = [category ? `category=${category}` : '', search ? `search=${encodeURIComponent(search)}` : ''].filter(Boolean).join('&')
+        const sep = base ? `${base}&` : ''
         document.getElementById('pagination')!.innerHTML = `
-          ${p > 1 ? `<a href="?${category ? `category=${category}&` : ''}page=${p-1}" class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">← Previous</a>` : ''}
+          ${p > 1 ? `<a href="?${sep}page=${p-1}" class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">← Previous</a>` : ''}
           <span class="text-sm text-gray-400">Page ${p} of ${totalPages}</span>
-          ${p < totalPages ? `<a href="?${category ? `category=${category}&` : ''}page=${p+1}" class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">Next →</a>` : ''}
+          ${p < totalPages ? `<a href="?${sep}page=${p+1}" class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">Next →</a>` : ''}
         `
       }
     } catch (err) {

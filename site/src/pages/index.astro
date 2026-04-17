@@ -2,86 +2,150 @@
 import Marketing from '@/layouts/Marketing.astro'
 ---
 <Marketing title="Shop greener">
+
   <!-- Hero -->
-  <section class="bg-gradient-to-b from-green-50 to-white px-6 py-24 text-center">
+  <section class="bg-gradient-to-b from-green-50 to-white px-6 py-20 text-center">
     <div class="mx-auto max-w-3xl">
-      <span class="mb-4 inline-block rounded-full bg-green-100 px-4 py-1.5 text-sm font-medium text-green-700">
-        Free browser extension
-      </span>
-      <h1 class="mb-6 text-5xl font-bold leading-tight tracking-tight text-gray-900">
-        See the carbon cost of<br />what you buy
+      <h1 class="mb-4 text-5xl font-bold leading-tight tracking-tight text-gray-900">
+        Know the carbon cost<br />before you buy
       </h1>
-      <p class="mb-10 text-xl leading-relaxed text-gray-600">
-        Right Choice reads product pages and surfaces the CO₂ footprint of what you're buying —
-        then suggests greener alternatives. Works on any site. Free.
+      <p class="mb-10 text-xl leading-relaxed text-gray-500">
+        Search any product, see its CO₂ footprint, and find a greener alternative — right here, no extension needed.
       </p>
-      <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-        <a
-          href="/install"
-          class="rounded-xl bg-green-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg hover:bg-green-700"
+
+      <!-- Search bar -->
+      <form action="/catalogue" method="get" class="mx-auto mb-4 flex max-w-xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100">
+        <input
+          type="text"
+          name="search"
+          placeholder="Search products, brands, or categories…"
+          class="flex-1 bg-transparent px-5 py-4 text-base text-gray-800 placeholder-gray-400 outline-none"
+          autofocus
+        />
+        <button
+          type="submit"
+          class="m-1.5 rounded-xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700"
         >
-          Add to Chrome — it's free
-        </a>
-        <a href="/how-it-works" class="text-base font-medium text-gray-600 hover:text-gray-900">
-          How does it work? →
-        </a>
+          Search
+        </button>
+      </form>
+
+      <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
+        <a href="/catalogue" class="font-medium text-green-700 hover:underline">Browse all products →</a>
+        <span class="text-gray-300">|</span>
+        <a href="/install" class="hover:text-gray-700">Get the extension</a>
       </div>
     </div>
   </section>
 
-  <!-- How it works -->
-  <section class="px-6 py-20">
-    <div class="mx-auto max-w-5xl">
-      <h2 class="mb-12 text-center text-3xl font-bold text-gray-900">Three steps, zero effort</h2>
-      <div class="grid gap-8 md:grid-cols-3">
-        {[
-          {
-            step: '1',
-            title: 'Install once',
-            body: 'Add Right Choice to Chrome or Firefox in one click. No account required.',
-          },
-          {
-            step: '2',
-            title: 'Browse normally',
-            body: 'When you visit a product page, Right Choice detects the carbon footprint automatically.',
-          },
-          {
-            step: '3',
-            title: 'See greener options',
-            body: 'A banner shows the CO₂e score and up to 3 lower-footprint alternatives.',
-          },
-        ].map(({ step, title, body }) => (
-          <div class="rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
-              {step}
-            </div>
-            <h3 class="mb-2 text-lg font-semibold text-gray-900">{title}</h3>
-            <p class="text-gray-600">{body}</p>
-          </div>
+  <!-- Category quick-nav (loaded dynamically) -->
+  <section class="border-b border-gray-100 bg-white px-6 py-6">
+    <div class="mx-auto max-w-6xl">
+      <div id="category-chips" class="flex flex-wrap gap-2">
+        {[0,1,2,3,4,5,6].map(() => (
+          <div class="h-8 w-24 animate-pulse rounded-full bg-gray-100"></div>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- Footprint detection vs estimation -->
+  <!-- Featured products -->
+  <section class="px-6 py-16">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-8 flex items-end justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Lowest footprint picks</h2>
+          <p class="text-sm text-gray-500">Products with the smallest lifecycle CO₂e in our catalogue</p>
+        </div>
+        <a href="/catalogue" class="text-sm font-medium text-green-700 hover:underline">View all →</a>
+      </div>
+      <div id="featured-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[0,1,2,3].map(() => (
+          <div class="h-52 animate-pulse rounded-2xl bg-gray-100"></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works — dual mode -->
   <section class="bg-gray-50 px-6 py-20">
+    <div class="mx-auto max-w-5xl">
+      <h2 class="mb-2 text-center text-3xl font-bold text-gray-900">Two ways to use Right Choice</h2>
+      <p class="mb-12 text-center text-gray-500">Use the web app on any device, or install the extension for always-on scores while you browse.</p>
+
+      <div class="grid gap-8 md:grid-cols-2">
+        <!-- Web app -->
+        <div class="rounded-2xl border border-green-200 bg-white p-8 shadow-sm">
+          <div class="mb-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-green-700">
+            Web app — no install needed
+          </div>
+          <ol class="space-y-4">
+            {[
+              { n: '1', t: 'Search', d: 'Type a product name or brand in the search bar above.' },
+              { n: '2', t: 'See the footprint', d: 'Browse CO₂e scores, certifications, and lifecycle data.' },
+              { n: '3', t: 'Pick greener', d: 'Compare alternatives ranked lowest-to-highest impact.' },
+            ].map(({ n, t, d }) => (
+              <li class="flex gap-4">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-600 text-sm font-bold text-white">{n}</span>
+                <div>
+                  <p class="font-semibold text-gray-900">{t}</p>
+                  <p class="text-sm text-gray-500">{d}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <a href="/catalogue" class="mt-6 inline-block rounded-xl border border-green-600 px-5 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50">
+            Open catalogue →
+          </a>
+        </div>
+
+        <!-- Extension -->
+        <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div class="mb-4 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-600">
+            Browser extension — always on
+          </div>
+          <ol class="space-y-4">
+            {[
+              { n: '1', t: 'Install once', d: 'Add to Chrome or Firefox in one click. No account required.' },
+              { n: '2', t: 'Browse normally', d: 'Visit any product page — Amazon, Zalando, wherever.' },
+              { n: '3', t: 'See scores inline', d: 'A banner appears automatically with the CO₂e score and greener alternatives.' },
+            ].map(({ n, t, d }) => (
+              <li class="flex gap-4">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-700">{n}</span>
+                <div>
+                  <p class="font-semibold text-gray-900">{t}</p>
+                  <p class="text-sm text-gray-500">{d}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <a href="/install" class="mt-6 inline-block rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700">
+            Install extension →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footprint Protocol / Verified scores -->
+  <section class="px-6 py-20">
     <div class="mx-auto max-w-5xl">
       <div class="grid items-center gap-12 md:grid-cols-2">
         <div>
           <h2 class="mb-4 text-3xl font-bold text-gray-900">Always a score, never a guess</h2>
-          <p class="mb-6 text-gray-600 leading-relaxed">
-            When a product carries verified <a href="https://footprint.c22.foundation/" target="_blank" class="font-medium text-green-700 underline underline-offset-2">Footprint Protocol</a> tags,
-            Right Choice reads the exact lifecycle CO₂e. When it doesn't, our standardised three-tier
-            estimation protocol derives a best-guess from material composition, product weight, and origin signals.
+          <p class="mb-6 leading-relaxed text-gray-600">
+            When a product carries <a href="https://footprint.c22.foundation/" target="_blank" class="font-medium text-green-700 underline underline-offset-2">Footprint Protocol</a> tags,
+            Right Choice reads the exact lifecycle CO₂e. When it doesn't, a three-tier
+            estimation protocol derives a figure from material composition, weight, and origin signals.
           </p>
           <p class="text-sm text-gray-500">
-            Every score shows its source: <span class="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">Verified</span> for tagged products,
-            <span class="rounded bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-700">Estimated Tier 1/2/3</span> for everything else.
+            Every score shows its source:
+            <span class="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">Verified</span> for tagged products,
+            <span class="rounded bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-700">Estimated</span> for everything else.
           </p>
         </div>
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <!-- Mock banner preview -->
-          <div class="mb-4 rounded-xl border border-green-100 bg-green-50 p-4">
+          <div class="mb-3 rounded-xl border border-green-100 bg-green-50 p-4">
             <div class="mb-2 flex items-center justify-between">
               <span class="text-sm font-semibold text-gray-800">Fairphone 5</span>
               <span class="rounded-full bg-green-600 px-2.5 py-0.5 text-xs font-bold text-white">Verified</span>
@@ -110,74 +174,30 @@ import Marketing from '@/layouts/Marketing.astro'
       <div class="grid gap-8 sm:grid-cols-3">
         <div>
           <p class="text-5xl font-black text-green-300" id="stat-co2e">—</p>
-          <p class="mt-2 text-sm text-green-200">kg CO₂e avoided<br />through greener choices</p>
+          <p class="mt-2 text-sm text-green-200">kg CO₂e avoided</p>
         </div>
         <div>
           <p class="text-5xl font-black text-green-300" id="stat-events">—</p>
-          <p class="mt-2 text-sm text-green-200">greener alternatives<br />clicked by real shoppers</p>
+          <p class="mt-2 text-sm text-green-200">greener alternatives clicked</p>
         </div>
         <div>
           <p class="text-5xl font-black text-green-300" id="stat-sessions">—</p>
-          <p class="mt-2 text-sm text-green-200">shoppers who made<br />a greener choice</p>
+          <p class="mt-2 text-sm text-green-200">shoppers choosing greener</p>
         </div>
       </div>
-      <p class="mt-8 text-xs text-green-400">
-        Impact is measured every time a shopper clicks a recommended alternative.
-        CO₂e saving = baseline footprint − chosen alternative footprint.
-        <a href="/how-it-works" class="underline underline-offset-2">Methodology →</a>
-      </p>
     </div>
   </section>
 
-  <!-- For Sellers section -->
-  <section class="px-6 py-24 bg-white">
+  <!-- For Sellers -->
+  <section class="px-6 py-24">
     <div class="mx-auto max-w-5xl">
-      <div class="rounded-3xl border border-gray-200 bg-gradient-to-br from-green-50 to-earth-50 p-10 shadow-sm">
+      <div class="rounded-3xl border border-gray-200 bg-gradient-to-br from-green-50 to-white p-10 shadow-sm">
         <div class="mb-2 text-sm font-semibold uppercase tracking-widest text-green-600">For sellers</div>
         <h2 class="mb-4 text-3xl font-bold text-gray-900">Tag your products. Get a verified score.</h2>
-        <p class="mb-8 max-w-2xl text-gray-600 leading-relaxed">
-          Products that carry <a href="https://footprint.c22.foundation/" target="_blank" rel="noopener" class="font-medium text-green-700 underline underline-offset-2">Footprint Protocol</a>
-          meta tags get a verified CO₂e badge — not an estimate. Verified products rank higher in
-          Right Choice's alternatives suggestions and build buyer trust. Add four lines to your product pages to get started.
+        <p class="mb-8 max-w-2xl leading-relaxed text-gray-600">
+          Products with <a href="https://footprint.c22.foundation/" target="_blank" rel="noopener" class="font-medium text-green-700 underline underline-offset-2">Footprint Protocol</a>
+          tags get a verified badge — not an estimate. They rank higher in alternatives and build buyer trust.
         </p>
-
-        <!-- Before / After comparison -->
-        <div class="mb-8 grid gap-4 md:grid-cols-2">
-          <div class="rounded-xl border border-gray-200 bg-white p-5">
-            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Without fp: tags</p>
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-gray-700">Your product</span>
-              <span class="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">Estimated T2</span>
-            </div>
-            <p class="mt-1 text-lg font-bold text-gray-500">~42 kg CO₂e</p>
-            <p class="mt-1 text-xs text-gray-400">Based on weight × category average</p>
-          </div>
-          <div class="rounded-xl border border-green-200 bg-green-50 p-5">
-            <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-green-600">With fp: tags</p>
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-gray-800">Your product</span>
-              <span class="rounded-full bg-green-600 px-2.5 py-0.5 text-xs font-bold text-white">Verified</span>
-            </div>
-            <p class="mt-1 text-lg font-bold text-green-700">29.4 kg CO₂e</p>
-            <p class="mt-1 text-xs text-gray-500">Exact lifecycle data you provided</p>
-          </div>
-        </div>
-
-        <!-- What sellers get -->
-        <ul class="mb-8 space-y-2 text-sm text-gray-600">
-          {[
-            'Verified badge — buyers see your real data, not a guess',
-            'Higher placement — verified products rank first in alternatives',
-            'Adoption recognition — your domain appears in our open detection registry',
-          ].map((item) => (
-            <li class="flex items-start gap-2">
-              <span class="mt-0.5 text-green-500">✓</span>
-              {item}
-            </li>
-          ))}
-        </ul>
-
-        <!-- Code snippet -->
         <div class="mb-8 rounded-xl bg-gray-900 p-5">
           <p class="mb-3 text-xs font-semibold text-gray-400">Add to your &lt;head&gt;</p>
           <pre class="overflow-x-auto font-mono text-sm text-green-300"><code>{`<meta property="fp:product"   content="Your Product Name" />
@@ -185,36 +205,73 @@ import Marketing from '@/layouts/Marketing.astro'
 <meta property="fp:co2e:unit" content="kg" />
 <meta property="fp:scope"     content="lifecycle" />`}</code></pre>
         </div>
-
-        <a
-          href="https://footprint.c22.foundation/"
-          target="_blank"
-          rel="noopener"
-          class="inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700"
-        >
+        <a href="https://footprint.c22.foundation/" target="_blank" rel="noopener"
+          class="inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700">
           Read the Footprint Protocol →
         </a>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
+  <!-- Final CTA -->
   <section class="bg-green-700 px-6 py-20 text-center text-white">
     <div class="mx-auto max-w-2xl">
       <h2 class="mb-4 text-3xl font-bold">Start shopping with a conscience</h2>
       <p class="mb-8 text-green-100">Free. Open source. No data sold. Ever.</p>
-      <a
-        href="/install"
-        class="inline-block rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-green-700 hover:bg-green-50"
-      >
-        Add to Chrome — free
-      </a>
+      <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <a href="/catalogue" class="rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-green-700 hover:bg-green-50">
+          Browse catalogue
+        </a>
+        <a href="/install" class="rounded-xl border border-green-300 px-8 py-3.5 text-base font-semibold text-white hover:border-white">
+          Install extension
+        </a>
+      </div>
     </div>
   </section>
+
 </Marketing>
 
 <script>
   import { API_BASE } from '@/lib/config'
+
+  // Load category chips
+  fetch(`${API_BASE}/v1/catalogue/categories`).then(r => r.ok ? r.json() : null).then((data) => {
+    if (!data?.categories) return
+    type Cat = { slug: string; name: string; parent_id: number | null }
+    const top: Cat[] = data.categories.filter((c: Cat) => c.parent_id === null).slice(0, 10)
+    document.getElementById('category-chips')!.innerHTML = top.map(c =>
+      `<a href="/catalogue?category=${c.slug}" class="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm font-medium text-gray-600 hover:border-green-400 hover:text-green-700 transition">${c.name}</a>`
+    ).join('')
+  }).catch(() => {})
+
+  // Load featured products (lowest CO2e)
+  fetch(`${API_BASE}/v1/catalogue/products?pageSize=4`).then(r => r.ok ? r.json() : null).then((data) => {
+    if (!data?.data) return
+    type Product = { id: number; name: string; brand: string; co2e_kg: number; co2e_source: string; image_url: string | null }
+    const products: Product[] = data.data
+    const color = (kg: number) => kg < 10 ? 'text-green-600' : kg < 30 ? 'text-yellow-600' : 'text-red-500'
+    const badge = (src: string) => src === 'certified' || src === 'fp_tag'
+      ? '<span class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700">Verified</span>'
+      : '<span class="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-bold text-yellow-700">Estimated</span>'
+
+    document.getElementById('featured-grid')!.innerHTML = products.map(p => `
+      <a href="/catalogue?search=${encodeURIComponent(p.name)}"
+        class="group flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-gray-200 hover:shadow-md">
+        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="mb-4 h-28 w-full rounded-xl object-contain bg-gray-50" loading="lazy" />` : '<div class="mb-4 h-28 w-full rounded-xl bg-gray-50"></div>'}
+        <p class="mb-0.5 text-xs font-medium uppercase tracking-wider text-gray-400">${p.brand}</p>
+        <h3 class="mb-3 flex-1 text-sm font-semibold leading-snug text-gray-900 group-hover:text-green-700">${p.name}</h3>
+        <div>
+          <div class="mb-1 flex items-baseline gap-1">
+            <span class="text-xl font-black ${color(p.co2e_kg)}">${p.co2e_kg.toFixed(1)}</span>
+            <span class="text-xs text-gray-400">kg CO₂e</span>
+          </div>
+          ${badge(p.co2e_source)}
+        </div>
+      </a>
+    `).join('')
+  }).catch(() => {})
+
+  // Impact stats
   fetch(`${API_BASE}/v1/impact/stats`).then(r => r.ok ? r.json() : null).then(data => {
     if (!data?.totals) return
     const t = data.totals

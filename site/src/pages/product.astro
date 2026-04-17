@@ -1,0 +1,92 @@
+---
+import Marketing from '@/layouts/Marketing.astro'
+---
+<Marketing title="Product footprint">
+  <div class="mx-auto max-w-4xl px-6 py-12">
+
+    <a href="/catalogue" class="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800">
+      ← Back to catalogue
+    </a>
+
+    <div id="product-card" class="mb-10 animate-pulse rounded-2xl bg-gray-100 h-64"></div>
+
+    <div id="alternatives-section" class="hidden">
+      <h2 class="mb-4 text-lg font-semibold text-gray-900">Greener alternatives</h2>
+      <div id="alternatives-grid" class="grid gap-4 sm:grid-cols-3"></div>
+    </div>
+
+  </div>
+</Marketing>
+
+<script>
+  import { API_BASE } from '@/lib/config'
+
+  const id = new URLSearchParams(location.search).get('id')
+  if (!id) window.location.replace('/catalogue')
+
+  const co2eColor = (kg: number) => kg < 10 ? 'text-green-600' : kg < 30 ? 'text-yellow-600' : 'text-red-500'
+  const sourceBadge = (s: string) => s === 'certified' || s === 'fp_tag'
+    ? '<span class="rounded-full bg-green-600 px-3 py-0.5 text-xs font-bold text-white">Verified</span>'
+    : '<span class="rounded-full bg-yellow-100 px-3 py-0.5 text-xs font-bold text-yellow-700">Estimated</span>'
+
+  async function load() {
+    const res = await fetch(`${API_BASE}/v1/catalogue/products/${id}`)
+    if (!res.ok) {
+      document.getElementById('product-card')!.innerHTML = '<p class="p-8 text-center text-gray-400">Product not found.</p>'
+      return
+    }
+
+    type Product = { id: number; name: string; brand: string; co2e_kg: number; co2e_source: string; co2e_scope: string | null; certifications: string | null; weight_kg: number | null; origin_country: string | null; url: string | null; image_url: string | null }
+    const { product: p }: { product: Product } = await res.json()
+    const certs: string[] = (() => { try { return JSON.parse(p.certifications ?? '[]') } catch { return [] } })()
+
+    document.title = `${p.name} — Right Choice`
+    document.getElementById('product-card')!.className = 'mb-10 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm'
+    document.getElementById('product-card')!.innerHTML = `
+      <div class="flex flex-col gap-6 sm:flex-row">
+        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="h-40 w-40 shrink-0 rounded-xl object-contain bg-gray-50" />` : ''}
+        <div class="flex-1">
+          <p class="mb-0.5 text-xs font-medium uppercase tracking-wider text-gray-400">${p.brand}</p>
+          <h1 class="mb-3 text-2xl font-bold text-gray-900">${p.name}</h1>
+          <div class="mb-4 flex flex-wrap items-center gap-3">
+            <span class="text-4xl font-black ${co2eColor(p.co2e_kg)}">${p.co2e_kg.toFixed(1)}<span class="ml-1 text-base font-normal text-gray-400">kg CO₂e</span></span>
+            ${sourceBadge(p.co2e_source)}
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs text-gray-500">
+            ${p.co2e_scope ? `<span class="rounded bg-gray-100 px-2 py-1">Scope: ${p.co2e_scope}</span>` : ''}
+            ${p.weight_kg ? `<span class="rounded bg-gray-100 px-2 py-1">Weight: ${p.weight_kg} kg</span>` : ''}
+            ${p.origin_country ? `<span class="rounded bg-gray-100 px-2 py-1">Origin: ${p.origin_country}</span>` : ''}
+            ${certs.map((c: string) => `<span class="rounded bg-blue-50 px-2 py-1 text-blue-600">${c}</span>`).join('')}
+          </div>
+          ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-green-700 hover:underline">View product page →</a>` : ''}
+        </div>
+      </div>
+    `
+
+    // Load greener alternatives from catalogue (lowest co2e, excluding this product)
+    const altData = await fetch(`${API_BASE}/v1/catalogue/products?pageSize=10`)
+    if (!altData.ok) return
+    type AltProduct = { id: number; name: string; brand: string; co2e_kg: number; co2e_source: string; image_url: string | null }
+    const { data }: { data: AltProduct[] } = await altData.json()
+    const alts = data.filter(a => a.id !== p.id && a.co2e_kg < p.co2e_kg).slice(0, 3)
+    if (alts.length === 0) return
+
+    document.getElementById('alternatives-section')!.classList.remove('hidden')
+    document.getElementById('alternatives-grid')!.innerHTML = alts.map(a => `
+      <a href="/product?id=${a.id}" class="group flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-green-200 hover:shadow-md">
+        ${a.image_url ? `<img src="${a.image_url}" alt="${a.name}" class="mb-3 h-24 w-full rounded-xl object-contain bg-gray-50" loading="lazy" />` : '<div class="mb-3 h-24 w-full rounded-xl bg-gray-50"></div>'}
+        <p class="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">${a.brand}</p>
+        <h3 class="mb-2 flex-1 text-sm font-semibold text-gray-900 group-hover:text-green-700">${a.name}</h3>
+        <div class="flex items-baseline gap-1">
+          <span class="text-lg font-black ${co2eColor(a.co2e_kg)}">${a.co2e_kg.toFixed(1)}</span>
+          <span class="text-xs text-gray-400">kg CO₂e</span>
+          <span class="ml-auto text-xs font-semibold text-green-600">−${(p.co2e_kg - a.co2e_kg).toFixed(1)} kg</span>
+        </div>
+      </a>
+    `).join('')
+  }
+
+  load().catch(() => {
+    document.getElementById('product-card')!.innerHTML = '<p class="p-8 text-center text-gray-400">Failed to load product.</p>'
+  })
+</script>
