@@ -1,4 +1,4 @@
-import type { AffiliateRule, ScoredAlternative, EstimationResult } from '@planet-right-choice/fp-types'
+import type { AffiliateRule, ScoredAlternative, EstimationResult, PageSignals } from '@planet-right-choice/fp-types'
 
 const API_BASE = import.meta.env['VITE_API_BASE'] ?? 'https://api.rightchoice.c22.space'
 const MAX_RETRIES = 3
@@ -76,7 +76,7 @@ export async function postFpDetection(payload: {
 }
 
 export async function postEstimate(payload: {
-  signals: Record<string, unknown>
+  signals: PageSignals
 }): Promise<EstimationResult | null> {
   const key = await getApiKey()
   const res = await fetchWithRetry(`${API_BASE}/v1/footprint/estimate`, {
