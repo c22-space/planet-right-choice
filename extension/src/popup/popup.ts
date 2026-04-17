@@ -35,12 +35,22 @@ async function main(): Promise<void> {
     setStorage('dataSharing', sharingToggle.checked)
   })
 
-  // Fetch current page status from storage (written by service worker after each scan)
+  // Poll storage until the service worker writes a result (up to 8s)
   if (tabId) {
-    chrome.storage.local.get('pageStatuses', (result) => {
-      const statuses = (result['pageStatuses'] as Record<number, PageStatus>) ?? {}
-      renderStatus(statuses[tabId] ?? null)
-    })
+    let attempts = 0
+    const poll = () => {
+      chrome.storage.local.get('pageStatuses', (result) => {
+        const statuses = (result['pageStatuses'] as Record<number, PageStatus>) ?? {}
+        const status = statuses[tabId] ?? null
+        if (status?.scanned || attempts >= 8) {
+          renderStatus(status)
+        } else {
+          attempts++
+          setTimeout(poll, 1000)
+        }
+      })
+    }
+    poll()
   } else {
     renderStatus(null)
   }

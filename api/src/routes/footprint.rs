@@ -1,4 +1,3 @@
-use crate::middleware::auth::api_key_required;
 use crate::services::estimation::{estimate as run_estimate, EstimationInput};
 use fp_parser::scan_html;
 use serde::Deserialize;
@@ -62,11 +61,7 @@ pub async fn parse(mut req: Request, ctx: RouteContext<()>) -> Result<Response> 
     Response::from_json(&json!({ "product": product }))
 }
 
-pub async fn estimate(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
-    if let Some(r) = api_key_required(&req, &ctx.env)? {
-        return Ok(r);
-    }
-
+pub async fn estimate(mut req: Request, _ctx: RouteContext<()>) -> Result<Response> {
     let body: EstimateBody = req.json().await?;
     let result = run_estimate(body.signals);
 
