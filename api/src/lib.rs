@@ -6,7 +6,7 @@ mod routes;
 mod services;
 
 fn cors_headers() -> Headers {
-    let mut h = Headers::new();
+    let h = Headers::new();
     h.set("Access-Control-Allow-Origin", "*").unwrap();
     h.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS").unwrap();
     h.set("Access-Control-Allow-Headers", "Content-Type, X-API-Key, Authorization").unwrap();
