@@ -126,13 +126,14 @@ pub async fn get_product(_req: Request, ctx: RouteContext<()>) -> Result<Respons
         .ok_or_else(|| worker::Error::RustError("invalid id".into()))?;
 
     let db = ctx.env.d1("DB")?;
-    let product = db
-        .prepare("SELECT * FROM products WHERE id = ?1 AND is_active = 1")
-        .bind(&[id.into()])?
-        .first::<Product>(None)
-        .await?;
+    let mut rows: Vec<serde_json::Value> = db
+        .prepare("SELECT * FROM products WHERE id = ?1 AND is_active = 1 LIMIT 1")
+        .bind(&[(id as f64).into()])?
+        .all()
+        .await?
+        .results()?;
 
-    match product {
+    match rows.pop() {
         Some(p) => Response::from_json(&json!({ "product": p })),
         None => Response::error("Not found", 404),
     }
