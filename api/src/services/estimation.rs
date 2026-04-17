@@ -2,6 +2,7 @@ use estimation_engine::{run_estimation, PageSignals};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EstimationInput {
     pub product_name: Option<String>,
     pub brand: Option<String>,

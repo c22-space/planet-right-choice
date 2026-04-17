@@ -161,12 +161,7 @@ async function handleEstimateRequested(
   incrementScanCount().catch(() => {})
   const { signals } = msg
 
-  const result = await postEstimate({
-    signals: {
-      ...signals,
-      session_id: SESSION_ID,
-    },
-  })
+  const result = await postEstimate({ signals })
 
   if (!result) {
     await updatePageStatus(tabId, {

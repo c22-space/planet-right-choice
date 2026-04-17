@@ -1,3 +1,4 @@
+use crate::middleware::auth::api_key_required;
 use crate::services::estimation::{estimate as run_estimate, EstimationInput};
 use fp_parser::scan_html;
 use serde::Deserialize;
