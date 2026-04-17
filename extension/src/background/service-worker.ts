@@ -12,7 +12,7 @@ import { newSessionId } from '../shared/messaging.js'
 
 // Session ID is ephemeral — created fresh each SW startup
 const SESSION_ID = newSessionId()
-const DEFAULT_AFFILIATE_TAG = 'bettercart-21'
+const DEFAULT_AFFILIATE_TAG = import.meta.env['VITE_AFFILIATE_TAG'] ?? ''
 
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 

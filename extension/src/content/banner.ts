@@ -169,7 +169,7 @@ export function injectBanner(data: BannerData): void {
       <div id="alternatives-section"></div>
 
       <div class="footer">
-        <a href="https://bettercart.earth/how-it-works" target="_blank" rel="noopener">
+        <a href="https://rightchoice.c22.space/how-it-works" target="_blank" rel="noopener">
           How we calculate this →
         </a>
       </div>

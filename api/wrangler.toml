@@ -17,11 +17,11 @@ binding = "ASSETS"
 bucket_name = "planet-right-choice-assets"
 
 [vars]
-AFFILIATE_TAG = "bettercart-21"
+AFFILIATE_TAG = ""
 ENVIRONMENT = "development"
 
 [env.production]
 name = "planet-right-choice-api-production"
 [env.production.vars]
-AFFILIATE_TAG = "bettercart-21"
+AFFILIATE_TAG = ""
 ENVIRONMENT = "production"

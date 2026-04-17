@@ -1,6 +1,6 @@
 import type { AffiliateRule, ScoredAlternative, EstimationResult } from '@planet-right-choice/fp-types'
 
-const API_BASE = 'https://api.bettercart.earth'
+const API_BASE = import.meta.env['VITE_API_BASE'] ?? 'https://api.rightchoice.c22.space'
 const MAX_RETRIES = 3
 
 async function fetchWithRetry(
