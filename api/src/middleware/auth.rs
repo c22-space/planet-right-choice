@@ -34,7 +34,7 @@ pub fn verify_admin(req: &Request, env: &Env) -> Result<bool> {
     };
 
     let secret = env.secret("ADMIN_JWT_SECRET")?.to_string();
-    verify_jwt(&token, &secret)
+    verify_jwt(token, &secret)
 }
 
 pub fn admin_required(req: &Request, env: &Env) -> Result<Option<Response>> {
@@ -122,9 +122,8 @@ fn base64_url_encode(data: &[u8]) -> String {
     let b64 = {
         let mut s = String::new();
         const TABLE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        let mut iter = data.chunks(3);
-        loop {
-            let Some(chunk) = iter.next() else { break };
+        let iter = data.chunks(3);
+        for chunk in iter {
             let (b0, b1, b2) = match chunk.len() {
                 1 => (chunk[0], 0, 0),
                 2 => (chunk[0], chunk[1], 0),
@@ -152,7 +151,7 @@ fn base64_url_encode(data: &[u8]) -> String {
 fn base64_url_decode(s: &str) -> Result<Vec<u8>> {
     let padded = {
         let mut s = s.replace('-', "+").replace('_', "/");
-        while s.len() % 4 != 0 {
+        while !s.len().is_multiple_of(4) {
             s.push('=');
         }
         s

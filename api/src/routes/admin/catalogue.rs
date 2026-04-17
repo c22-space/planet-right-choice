@@ -39,14 +39,14 @@ pub async fn list(req: Request, ctx: RouteContext<()>) -> Result<Response> {
     let where_clause = if include_inactive { "" } else { "WHERE p.is_active = 1" };
 
     let total = db
-        .prepare(&format!("SELECT COUNT(*) as n FROM products p {where_clause}"))
+        .prepare(format!("SELECT COUNT(*) as n FROM products p {where_clause}"))
         .first::<serde_json::Value>(None)
         .await?
         .and_then(|v| v["n"].as_i64())
         .unwrap_or(0);
 
     let products: Vec<Product> = db
-        .prepare(&format!(
+        .prepare(format!(
             "SELECT p.*, c.slug as category_slug FROM products p
              JOIN categories c ON p.category_id = c.id
              {where_clause}
@@ -81,11 +81,11 @@ pub async fn create(mut req: Request, ctx: RouteContext<()>) -> Result<Response>
         body.name.into(), body.brand.into(), body.category_id.into(),
         body.asin.unwrap_or_default().into(), body.url.unwrap_or_default().into(),
         body.image_url.unwrap_or_default().into(), body.description.unwrap_or_default().into(),
-        body.co2e_kg.map(|v| worker::wasm_bindgen::JsValue::from_f64(v)).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
+        body.co2e_kg.map(worker::wasm_bindgen::JsValue::from_f64).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
         body.co2e_scope.unwrap_or_default().into(), body.co2e_source.unwrap_or_default().into(),
-        body.co2e_confidence.map(|v| worker::wasm_bindgen::JsValue::from_f64(v)).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
+        body.co2e_confidence.map(worker::wasm_bindgen::JsValue::from_f64).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
         certs.into(), mats.into(),
-        body.weight_kg.map(|v| worker::wasm_bindgen::JsValue::from_f64(v)).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
+        body.weight_kg.map(worker::wasm_bindgen::JsValue::from_f64).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
         body.origin_country.unwrap_or_default().into(),
     ])?.first::<serde_json::Value>(None).await?;
 
@@ -116,11 +116,11 @@ pub async fn update(mut req: Request, ctx: RouteContext<()>) -> Result<Response>
         body.name.into(), body.brand.into(), body.category_id.into(),
         body.asin.unwrap_or_default().into(), body.url.unwrap_or_default().into(),
         body.image_url.unwrap_or_default().into(), body.description.unwrap_or_default().into(),
-        body.co2e_kg.map(|v| worker::wasm_bindgen::JsValue::from_f64(v)).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
+        body.co2e_kg.map(worker::wasm_bindgen::JsValue::from_f64).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
         body.co2e_scope.unwrap_or_default().into(), body.co2e_source.unwrap_or_default().into(),
-        body.co2e_confidence.map(|v| worker::wasm_bindgen::JsValue::from_f64(v)).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
+        body.co2e_confidence.map(worker::wasm_bindgen::JsValue::from_f64).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
         certs.into(), mats.into(),
-        body.weight_kg.map(|v| worker::wasm_bindgen::JsValue::from_f64(v)).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
+        body.weight_kg.map(worker::wasm_bindgen::JsValue::from_f64).unwrap_or(worker::wasm_bindgen::JsValue::NULL),
         body.origin_country.unwrap_or_default().into(),
         id.into(),
     ])?.run().await?;

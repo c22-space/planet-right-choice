@@ -2,23 +2,18 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Co2eScope {
+    #[default]
     Lifecycle,
     CradleToGate,
     UsePhase,
     EndOfLife,
 }
 
-impl Default for Co2eScope {
-    fn default() -> Self {
-        Self::Lifecycle
-    }
-}
-
 impl Co2eScope {
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse_scope(s: &str) -> Self {
         match s {
             "lifecycle" => Self::Lifecycle,
             "cradle-to-gate" => Self::CradleToGate,
@@ -76,7 +71,7 @@ pub fn parse_fp_tags(tags: &HashMap<String, String>) -> Result<FpProduct, ParseE
 
     let scope = tags
         .get("fp:scope")
-        .map(|s| Co2eScope::from_str(s))
+        .map(|s| Co2eScope::parse_scope(s))
         .unwrap_or_default();
 
     Ok(FpProduct {
@@ -142,13 +137,13 @@ fn extract_attr(tag: &str, attr: &str) -> Option<String> {
     let pos = lower.find(&pattern)?;
     let after = &tag[pos + pattern.len()..];
 
-    let (quote, rest) = if after.starts_with('"') {
-        ('"', &after[1..])
-    } else if after.starts_with('\'') {
-        ('\'', &after[1..])
+    let (quote, rest) = if let Some(r) = after.strip_prefix('"') {
+        ('"', r)
+    } else if let Some(r) = after.strip_prefix('\'') {
+        ('\'', r)
     } else {
         // unquoted — read to next space or >
-        let end = after.find(|c: char| c == ' ' || c == '>').unwrap_or(after.len());
+        let end = after.find([' ', '>']).unwrap_or(after.len());
         return Some(after[..end].to_string());
     };
 

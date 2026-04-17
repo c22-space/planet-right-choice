@@ -120,7 +120,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 
 fn hex_decode(s: &str) -> Option<Vec<u8>> {
-    if s.len() % 2 != 0 { return None; }
+    if !s.len().is_multiple_of(2) { return None; }
     s.as_bytes()
         .chunks(2)
         .map(|c| {

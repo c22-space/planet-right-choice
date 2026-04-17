@@ -32,8 +32,8 @@ export function scanFpTags(): FpProduct | null {
     product,
     co2eKg,
     scope,
-    certifier: tags['fp:certifier'],
-    fpVersion: tags['fp:version'],
+    ...(tags['fp:certifier'] !== undefined ? { certifier: tags['fp:certifier'] } : {}),
+    ...(tags['fp:version'] !== undefined ? { fpVersion: tags['fp:version'] } : {}),
     rawTags: { ...tags },
   }
 }
@@ -111,7 +111,7 @@ function extractBreadcrumb(): string[] {
       if (data['@type'] === 'BreadcrumbList' && Array.isArray(data.itemListElement)) {
         return data.itemListElement
           .map((item: Record<string, unknown>) => {
-            const name = item['name'] ?? item['item']?.['name']
+            const name = item['name'] ?? (item['item'] as Record<string, unknown>)?.['name']
             return typeof name === 'string' ? name : null
           })
           .filter(Boolean) as string[]

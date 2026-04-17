@@ -46,6 +46,7 @@ pub struct AffiliateRule {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct FpDetection {
     pub id: i64,
     pub session_id: String,
@@ -60,6 +61,7 @@ pub struct FpDetection {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct Estimation {
     pub id: i64,
     pub session_id: String,
@@ -75,6 +77,7 @@ pub struct Estimation {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct AdminUser {
     pub id: i64,
     pub email: String,

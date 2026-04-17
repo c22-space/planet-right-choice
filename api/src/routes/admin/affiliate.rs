@@ -31,7 +31,7 @@ pub async fn list_rules(req: Request, ctx: RouteContext<()>) -> Result<Response>
 
     let db = ctx.env.d1("DB")?;
     let rules: Vec<AffiliateRule> = db
-        .prepare(&format!(
+        .prepare(format!(
             "SELECT id, source_asin, target_asin, affiliate_tag, reason, is_active, priority
              FROM affiliate_rules {where_clause}
              ORDER BY priority DESC, created_at DESC
@@ -43,7 +43,7 @@ pub async fn list_rules(req: Request, ctx: RouteContext<()>) -> Result<Response>
         .results()?;
 
     let total = db
-        .prepare(&format!("SELECT COUNT(*) as n FROM affiliate_rules {where_clause}"))
+        .prepare(format!("SELECT COUNT(*) as n FROM affiliate_rules {where_clause}"))
         .first::<serde_json::Value>(None)
         .await?
         .and_then(|v| v["n"].as_i64())

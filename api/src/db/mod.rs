@@ -3,6 +3,7 @@ pub mod models;
 use worker::{D1Database, Result};
 use models::Product;
 
+#[allow(dead_code)]
 pub async fn get_products_by_category(
     db: &D1Database,
     category_slug: &str,

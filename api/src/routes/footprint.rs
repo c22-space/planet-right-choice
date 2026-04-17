@@ -12,6 +12,7 @@ struct ParseBody {
     session_id: String,
     domain: String,
     page_url_hash: String,
+    #[allow(dead_code)]
     product_name: Option<String>,
 }
 

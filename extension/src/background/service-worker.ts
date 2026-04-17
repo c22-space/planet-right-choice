@@ -1,4 +1,4 @@
-import type { ContentToBackground } from '@better-cart/fp-types'
+import type { ContentToBackground, ScoredAlternative } from '@better-cart/fp-types'
 import { setupRulesSync } from './rules-sync.js'
 import {
   fetchAlternativesByAsin,
@@ -125,7 +125,7 @@ async function handleFpDetected(
   }).catch(() => {})
 
   // Fetch alternatives
-  let alternatives = []
+  let alternatives: ScoredAlternative[] = []
   if (signals.asin) {
     const res = await fetchAlternativesByAsin(signals.asin)
     alternatives = res.alternatives
@@ -222,9 +222,9 @@ chrome.webNavigation?.onBeforeNavigate?.addListener(async (details) => {
     // Record click
     handleAffiliateClick({
       sourceAsin: asin,
-      targetAsin: rule?.targetAsin ?? undefined,
+      ...(rule?.targetAsin ? { targetAsin: rule.targetAsin } : {}),
       sessionId: SESSION_ID,
-      ruleId: rule?.id,
+      ...(rule?.id !== undefined ? { ruleId: rule.id } : {}),
     }).catch(() => {})
 
     if (details.tabId > 0) {
