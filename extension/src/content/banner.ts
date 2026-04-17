@@ -154,9 +154,9 @@ export function injectBanner(data: BannerData): void {
       .footer a:hover { color: #6b7280; }
     </style>
 
-    <div class="banner" role="dialog" aria-label="Better Cart — carbon footprint">
+    <div class="banner" role="dialog" aria-label="Right Choice — carbon footprint">
       <div class="header">
-        <span class="logo">BETTER CART</span>
+        <span class="logo">RIGHT CHOICE</span>
         <button class="close-btn" id="close-btn" aria-label="Dismiss">×</button>
       </div>
 

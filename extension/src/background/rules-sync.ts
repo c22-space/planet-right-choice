@@ -7,9 +7,9 @@ export async function syncRules(): Promise<void> {
       affiliateRules: rules,
       rulesSyncedAt: Date.now(),
     })
-    console.log(`[Better Cart] Synced ${rules.length} affiliate rules`)
+    console.log(`[Right Choice] Synced ${rules.length} affiliate rules`)
   } catch (err) {
-    console.warn('[Better Cart] Rules sync failed:', err)
+    console.warn('[Right Choice] Rules sync failed:', err)
   }
 }
 
