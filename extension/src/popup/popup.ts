@@ -23,10 +23,11 @@ async function main(): Promise<void> {
     setStorage('dataSharing', sharingToggle.checked)
   })
 
-  // Fetch current page status
+  // Fetch current page status from storage (written by service worker after each scan)
   if (tabId) {
-    chrome.tabs.sendMessage(tabId, { type: 'GET_PAGE_STATUS' }, (status: PageStatus | null) => {
-      renderStatus(status)
+    chrome.storage.local.get('pageStatuses', (result) => {
+      const statuses = (result['pageStatuses'] as Record<number, PageStatus>) ?? {}
+      renderStatus(statuses[tabId] ?? null)
     })
   } else {
     renderStatus(null)

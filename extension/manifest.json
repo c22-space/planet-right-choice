@@ -31,6 +31,9 @@
     "https://*.amazon.com/*",
     "https://*.amazon.co.uk/*",
     "https://*.amazon.de/*",
+    "https://*.amazon.in/*",
+    "https://*.amazon.com.au/*",
+    "https://*.amazon.ca/*",
     "https://api.rightchoice.c22.space/*"
   ],
   "web_accessible_resources": [
