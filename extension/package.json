@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-cart/fp-types": "workspace:*"
+    "@planet-right-choice/fp-types": "workspace:*"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.270",

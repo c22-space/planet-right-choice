@@ -1,4 +1,4 @@
-import type { AffiliateRule, ScoredAlternative, EstimationResult } from '@better-cart/fp-types'
+import type { AffiliateRule, ScoredAlternative, EstimationResult } from '@planet-right-choice/fp-types'
 
 const API_BASE = 'https://api.bettercart.earth'
 const MAX_RETRIES = 3

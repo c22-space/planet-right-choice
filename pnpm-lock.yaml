@@ -23,7 +23,7 @@ importers:
 
   extension:
     dependencies:
-      '@better-cart/fp-types':
+      '@planet-right-choice/fp-types':
         specifier: workspace:*
         version: link:../packages/fp-types
     devDependencies:

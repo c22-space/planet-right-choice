@@ -31,10 +31,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Build shared packages
-        run: pnpm --filter '@better-cart/fp-types' build
+        run: pnpm --filter '@planet-right-choice/fp-types' build
 
       - name: Typecheck — fp-types
-        run: pnpm --filter '@better-cart/fp-types' typecheck
+        run: pnpm --filter '@planet-right-choice/fp-types' typecheck
 
       - name: Typecheck — extension
         run: pnpm --filter extension typecheck

@@ -1,6 +1,6 @@
-import type { ScoredAlternative, Co2eSource, EstimationTier } from '@better-cart/fp-types'
+import type { ScoredAlternative, Co2eSource, EstimationTier } from '@planet-right-choice/fp-types'
 
-const BANNER_ID = 'better-cart-root'
+const BANNER_ID = 'planet-right-choice-root'
 const DISMISSED_KEY = 'dismissed'
 
 interface BannerData {

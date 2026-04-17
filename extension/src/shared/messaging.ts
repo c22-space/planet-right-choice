@@ -5,7 +5,7 @@ import type {
   ScoredAlternative,
   Co2eSource,
   EstimationTier,
-} from '@better-cart/fp-types'
+} from '@planet-right-choice/fp-types'
 
 export type { ContentToBackground, BackgroundToContent }
 

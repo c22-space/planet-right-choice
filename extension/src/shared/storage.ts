@@ -1,4 +1,4 @@
-import type { AffiliateRule, PageStatus } from '@better-cart/fp-types'
+import type { AffiliateRule, PageStatus } from '@planet-right-choice/fp-types'
 
 export interface ExtensionStorage {
   affiliateRules: AffiliateRule[]

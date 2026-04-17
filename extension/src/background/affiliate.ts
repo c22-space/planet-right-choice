@@ -1,4 +1,4 @@
-import type { AffiliateRule } from '@better-cart/fp-types'
+import type { AffiliateRule } from '@planet-right-choice/fp-types'
 import { postAffiliateClick } from './api-client.js'
 
 const ASIN_REGEX = /\/dp\/([A-Z0-9]{10})/

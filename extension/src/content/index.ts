@@ -1,4 +1,4 @@
-import type { BackgroundToContent } from '@better-cart/fp-types'
+import type { BackgroundToContent } from '@planet-right-choice/fp-types'
 import { scanFpTags, extractPageSignals } from './scanner.js'
 import { injectBanner } from './banner.js'
 import { sendToBackground, newSessionId } from '../shared/messaging.js'

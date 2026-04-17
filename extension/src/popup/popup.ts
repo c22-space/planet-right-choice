@@ -1,4 +1,4 @@
-import type { PageStatus } from '@better-cart/fp-types'
+import type { PageStatus } from '@planet-right-choice/fp-types'
 import { getMultiple, setStorage } from '../shared/storage.js'
 
 async function main(): Promise<void> {

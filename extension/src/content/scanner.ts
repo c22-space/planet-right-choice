@@ -1,4 +1,4 @@
-import type { FpProduct, PageSignals } from '@better-cart/fp-types'
+import type { FpProduct, PageSignals } from '@planet-right-choice/fp-types'
 import { hashUrl } from '../shared/messaging.js'
 
 const FP_META_SELECTOR = 'meta[property^="fp:"]'

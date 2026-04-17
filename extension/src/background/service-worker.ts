@@ -1,4 +1,4 @@
-import type { ContentToBackground, ScoredAlternative } from '@better-cart/fp-types'
+import type { ContentToBackground, ScoredAlternative } from '@planet-right-choice/fp-types'
 import { setupRulesSync } from './rules-sync.js'
 import {
   fetchAlternativesByAsin,
@@ -214,7 +214,7 @@ chrome.webNavigation?.onBeforeNavigate?.addListener(async (details) => {
   if (!asin) return
 
   const result = await chrome.storage.local.get(['affiliateRules'])
-  const rules = (result['affiliateRules'] as import('@better-cart/fp-types').AffiliateRule[]) ?? []
+  const rules = (result['affiliateRules'] as import('@planet-right-choice/fp-types').AffiliateRule[]) ?? []
 
   const { rewritten, rule } = rewriteAmazonUrl(details.url, rules, DEFAULT_AFFILIATE_TAG)
 
@@ -237,7 +237,7 @@ chrome.webNavigation?.onBeforeNavigate?.addListener(async (details) => {
 
 async function updatePageStatus(
   tabId: number,
-  status: import('@better-cart/fp-types').PageStatus,
+  status: import('@planet-right-choice/fp-types').PageStatus,
 ): Promise<void> {
   const result = await chrome.storage.local.get('pageStatuses')
   const statuses = (result['pageStatuses'] as Record<number, unknown>) ?? {}
