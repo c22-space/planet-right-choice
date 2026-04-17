@@ -8,9 +8,21 @@ async function main(): Promise<void> {
   const tab = tabs[0]
   const tabId = tab?.id
 
+  // View switching
+  const mainView = document.getElementById('main-view')!
+  const settingsView = document.getElementById('settings-view')!
+  document.getElementById('open-settings')!.addEventListener('click', () => {
+    mainView.classList.remove('active')
+    settingsView.classList.add('active')
+  })
+  document.getElementById('close-settings')!.addEventListener('click', () => {
+    settingsView.classList.remove('active')
+    mainView.classList.add('active')
+  })
+
   const { showBanner, dataSharing } = await getMultiple(['showBanner', 'dataSharing'])
 
-  // Render settings
+  // Settings toggles
   const bannerToggle = document.getElementById('toggle-banner') as HTMLInputElement
   bannerToggle.checked = showBanner
   bannerToggle.addEventListener('change', () => {
