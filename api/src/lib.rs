@@ -5,14 +5,32 @@ mod middleware;
 mod routes;
 mod services;
 
+fn cors_headers() -> Headers {
+    let mut h = Headers::new();
+    h.set("Access-Control-Allow-Origin", "*").unwrap();
+    h.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS").unwrap();
+    h.set("Access-Control-Allow-Headers", "Content-Type, X-API-Key, Authorization").unwrap();
+    h
+}
+
+async fn add_cors(resp: Result<Response>) -> Result<Response> {
+    let mut r = resp?;
+    let headers = r.headers_mut();
+    headers.set("Access-Control-Allow-Origin", "*")?;
+    Ok(r)
+}
+
 #[event(fetch)]
 pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
-    // Panic hook for better error messages in Workers
     console_error_panic_hook::set_once();
+
+    if req.method() == Method::Options {
+        return Ok(Response::empty()?.with_headers(cors_headers()));
+    }
 
     let router = Router::new();
 
-    router
+    add_cors(router
         // Health
         .get_async("/v1/health", routes::health::handle)
         // Footprint
@@ -48,5 +66,5 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         .post_async("/v1/impact/record", routes::impact::record)
         .get_async("/v1/admin/impact", routes::impact::admin_stats)
         .run(req, env)
-        .await
+        .await).await
 }
