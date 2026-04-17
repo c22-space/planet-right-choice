@@ -16,34 +16,53 @@ pub async fn list(req: Request, ctx: RouteContext<()>) -> Result<Response> {
 
     let db = ctx.env.d1("DB")?;
 
-    let where_clause = if let Some(t) = tier {
-        format!("WHERE e.tier = {t}")
+    let (total, rows) = if let Some(t) = tier {
+        let total = db
+            .prepare("SELECT COUNT(*) as n FROM estimations e WHERE e.tier = ?1")
+            .bind(&[t.into()])?
+            .first::<serde_json::Value>(None)
+            .await?
+            .and_then(|v| v["n"].as_i64())
+            .unwrap_or(0);
+        let rows: Vec<serde_json::Value> = db
+            .prepare(
+                "SELECT e.id, e.domain, e.product_name, e.estimated_co2e_kg,
+                        e.confidence, e.tier, e.method_version, e.created_at,
+                        c.slug as category_slug, c.name as category_name
+                 FROM estimations e
+                 LEFT JOIN categories c ON e.category_id = c.id
+                 WHERE e.tier = ?1
+                 ORDER BY e.created_at DESC
+                 LIMIT ?2 OFFSET ?3",
+            )
+            .bind(&[t.into(), (page_size as f64).into(), (offset as f64).into()])?
+            .all()
+            .await?
+            .results()?;
+        (total, rows)
     } else {
-        String::new()
+        let total = db
+            .prepare("SELECT COUNT(*) as n FROM estimations e")
+            .first::<serde_json::Value>(None)
+            .await?
+            .and_then(|v| v["n"].as_i64())
+            .unwrap_or(0);
+        let rows: Vec<serde_json::Value> = db
+            .prepare(
+                "SELECT e.id, e.domain, e.product_name, e.estimated_co2e_kg,
+                        e.confidence, e.tier, e.method_version, e.created_at,
+                        c.slug as category_slug, c.name as category_name
+                 FROM estimations e
+                 LEFT JOIN categories c ON e.category_id = c.id
+                 ORDER BY e.created_at DESC
+                 LIMIT ?1 OFFSET ?2",
+            )
+            .bind(&[(page_size as f64).into(), (offset as f64).into()])?
+            .all()
+            .await?
+            .results()?;
+        (total, rows)
     };
-
-    let total = db
-        .prepare(&format!("SELECT COUNT(*) as n FROM estimations e {where_clause}"))
-        .first::<serde_json::Value>(None)
-        .await?
-        .and_then(|v| v["n"].as_i64())
-        .unwrap_or(0);
-
-    let rows: Vec<serde_json::Value> = db
-        .prepare(&format!(
-            "SELECT e.id, e.domain, e.product_name, e.estimated_co2e_kg,
-                    e.confidence, e.tier, e.method_version, e.created_at,
-                    c.slug as category_slug, c.name as category_name
-             FROM estimations e
-             LEFT JOIN categories c ON e.category_id = c.id
-             {where_clause}
-             ORDER BY e.created_at DESC
-             LIMIT ?1 OFFSET ?2"
-        ))
-        .bind(&[(page_size as f64).into(), (offset as f64).into()])?
-        .all()
-        .await?
-        .results()?;
 
     // Confidence breakdown by tier
     let tier_stats: Vec<serde_json::Value> = db

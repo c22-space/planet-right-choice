@@ -49,7 +49,7 @@ import Base from '@/layouts/Base.astro'
   import { API_BASE } from '@/lib/config'
 
   // Already logged in?
-  if (localStorage.getItem('admin_token')) {
+  if (sessionStorage.getItem('admin_token')) {
     window.location.href = '/admin/'
   }
 
@@ -74,7 +74,7 @@ import Base from '@/layouts/Base.astro'
       })
       if (!res.ok) throw new Error('Invalid credentials')
       const data = await res.json() as { ok: boolean; token: string }
-      localStorage.setItem('admin_token', data.token)
+      sessionStorage.setItem('admin_token', data.token)
       window.location.href = '/admin/'
     } catch (err) {
       errorBox.textContent = String(err)

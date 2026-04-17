@@ -30,7 +30,7 @@ import Admin from '@/layouts/Admin.astro'
 <script>
   import { API_BASE } from '@/lib/config'
 
-  const token = localStorage.getItem('admin_token')
+  const token = sessionStorage.getItem('admin_token')
   if (!token) { window.location.href = '/admin/login'; throw 0 }
 
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
