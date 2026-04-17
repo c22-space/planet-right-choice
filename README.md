@@ -1,4 +1,4 @@
-# Better Cart
+# Planet Right Choice
 
 A browser extension + Cloudflare web app that reads [Footprint Protocol](https://footprint.c22.foundation/) tags from product pages and suggests greener alternatives — so you can spend your money on brands that actually give a shit.
 
