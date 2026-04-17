@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 
 // Plugin: copy manifest.json and static assets to dist/
 function extensionPlugin(target: 'chrome' | 'firefox' = 'chrome') {
@@ -23,6 +23,14 @@ function extensionPlugin(target: 'chrome' | 'firefox' = 'chrome') {
         resolve(__dirname, 'src/popup/index.html'),
         resolve(__dirname, 'dist/popup/index.html'),
       )
+
+      // Copy icons into dist/icons/
+      const iconsDir = resolve(__dirname, 'icons')
+      const iconsOut = resolve(__dirname, 'dist/icons')
+      mkdirSync(iconsOut, { recursive: true })
+      for (const file of readdirSync(iconsDir)) {
+        copyFileSync(resolve(iconsDir, file), resolve(iconsOut, file))
+      }
     },
   }
 }
