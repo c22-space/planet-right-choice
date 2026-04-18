@@ -1,9 +1,10 @@
+use crate::db::models::{resolve_image, Product};
 use crate::middleware::auth::api_key_required;
 use crate::services::estimation::{estimate as run_estimate, EstimationInput};
 use fp_parser::scan_html;
 use serde::Deserialize;
 use serde_json::json;
-use worker::{Request, Response, Result, RouteContext};
+use worker::{Fetch, Request, Response, Result, RouteContext};
 
 #[derive(Deserialize)]
 struct ParseBody {
@@ -67,6 +68,122 @@ pub async fn estimate(mut req: Request, _ctx: RouteContext<()>) -> Result<Respon
     let result = run_estimate(body.signals);
 
     Response::from_json(&json!({ "result": result }))
+}
+
+/// Extract simple signals from any product page HTML using meta tags / JSON-LD.
+fn extract_signals(html: &str, url: &str) -> EstimationInput {
+    let meta = |prop: &str| -> Option<String> {
+        let patterns = [
+            format!(r#"property="{prop}"[^>]+content="([^"]+)""#),
+            format!(r#"content="([^"]+)"[^>]+property="{prop}""#),
+            format!(r#"name="{prop}"[^>]+content="([^"]+)""#),
+            format!(r#"content="([^"]+)"[^>]+name="{prop}""#),
+        ];
+        for pat in &patterns {
+            if let Ok(re) = regex_lite::Regex::new(pat) {
+                if let Some(cap) = re.captures(html) {
+                    return Some(cap[1].trim().to_string());
+                }
+            }
+        }
+        None
+    };
+
+    let product_name = meta("og:title")
+        .or_else(|| meta("twitter:title"))
+        .or_else(|| {
+            // fallback: <title>...</title>
+            let re = regex_lite::Regex::new(r"<title[^>]*>([^<]+)</title>").ok()?;
+            re.captures(html).map(|c| c[1].trim().to_string())
+        });
+
+    let brand = meta("og:brand")
+        .or_else(|| meta("product:brand"))
+        .or_else(|| meta("og:site_name"));
+
+    let price_usd = meta("product:price:amount")
+        .or_else(|| meta("og:price:amount"))
+        .and_then(|s| s.parse::<f64>().ok());
+
+    let domain = url::Url::parse(url)
+        .ok()
+        .and_then(|u| u.host_str().map(|h| h.to_string()))
+        .unwrap_or_default();
+
+    // Simple breadcrumb from og:description or JSON-LD @type
+    let description = meta("og:description").or_else(|| meta("description"));
+    let category_breadcrumb = description
+        .as_deref()
+        .map(|_| vec![])
+        .unwrap_or_default();
+
+    EstimationInput {
+        product_name,
+        brand,
+        category_breadcrumb,
+        amazon_category: None,
+        weight_kg: None,
+        material_hints: vec![],
+        origin_country: None,
+        price_usd,
+        asin: None,
+        domain,
+        page_url_hash: String::new(),
+        session_id: String::new(),
+    }
+}
+
+#[derive(Deserialize)]
+struct FromUrlBody {
+    url: String,
+}
+
+/// Public: accepts any product URL, checks catalogue then estimates.
+pub async fn from_url(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    let body: FromUrlBody = req.json().await?;
+    let url = body.url.trim().to_string();
+
+    let db = ctx.env.d1("DB")?;
+
+    // 1. Check catalogue by exact URL match
+    let mut rows: Vec<Product> = db
+        .prepare("SELECT * FROM products WHERE url = ?1 AND is_active = 1 LIMIT 1")
+        .bind(&[url.clone().into()])?
+        .all()
+        .await?
+        .results()?;
+
+    if let Some(p) = rows.pop().map(resolve_image) {
+        return Response::from_json(&json!({ "source": "catalogue", "product": p }));
+    }
+
+    // 2. Fetch the page and extract signals
+    let fetch_req = Request::new(&url, worker::Method::Get)?;
+    let mut page_resp = Fetch::Request(fetch_req).send().await
+        .map_err(|e| worker::Error::RustError(format!("fetch failed: {e}")))?;
+
+    if page_resp.status_code() >= 400 {
+        return Response::error("Could not fetch the product page", 422);
+    }
+
+    let html = page_resp.text().await?;
+
+    // Try fp: tags first
+    if let Some(fp) = scan_html(&html) {
+        return Response::from_json(&json!({
+            "source": "fp_tags",
+            "co2e_kg": fp.co2e_kg,
+            "product_name": fp.product,
+            "confidence": 1.0,
+            "tier": 0,
+        }));
+    }
+
+    // Fall back to estimation from meta signals
+    let signals = extract_signals(&html, &url);
+    let result = run_estimate(signals);
+
+    Response::from_json(&json!({ "source": "estimated", "estimate": result }))
 }
 
 pub async fn get_product_footprint(_req: Request, ctx: RouteContext<()>) -> Result<Response> {

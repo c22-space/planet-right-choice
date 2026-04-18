@@ -36,6 +36,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         // Footprint
         .post_async("/v1/footprint/parse", routes::footprint::parse)
         .post_async("/v1/footprint/estimate", routes::footprint::estimate)
+        .post_async("/v1/footprint/from-url", routes::footprint::from_url)
         .get_async("/v1/footprint/:product_id", routes::footprint::get_product_footprint)
         // Alternatives
         .get_async("/v1/alternatives", routes::alternatives::list)
@@ -48,6 +49,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         .get_async("/v1/catalogue/categories", routes::catalogue::list_categories)
         .get_async("/v1/catalogue/products", routes::catalogue::list_products)
         .get_async("/v1/catalogue/products/:id", routes::catalogue::get_product)
+        .get_async("/v1/catalogue/products/asin/:asin", routes::catalogue::get_product_by_asin)
         // Admin — auth handled inside each handler
         .post_async("/v1/admin/auth/login", routes::admin::auth::login)
         .get_async("/v1/admin/catalogue/products", routes::admin::catalogue::list)

@@ -139,3 +139,20 @@ pub async fn get_product(_req: Request, ctx: RouteContext<()>) -> Result<Respons
         None => Response::error("Not found", 404),
     }
 }
+
+pub async fn get_product_by_asin(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    let asin = ctx.param("asin").map_or("".to_string(), |s| s.to_string());
+
+    let db = ctx.env.d1("DB")?;
+    let mut rows: Vec<Product> = db
+        .prepare("SELECT * FROM products WHERE asin = ?1 AND is_active = 1 LIMIT 1")
+        .bind(&[asin.into()])?
+        .all()
+        .await?
+        .results()?;
+
+    match rows.pop().map(resolve_image) {
+        Some(p) => Response::from_json(&json!({ "product": p })),
+        None => Response::error("Not found", 404),
+    }
+}

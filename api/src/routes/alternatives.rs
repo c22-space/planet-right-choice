@@ -23,6 +23,10 @@ pub async fn list(req: Request, ctx: RouteContext<()>) -> Result<Response> {
         .unwrap_or(3)
         .min(10);
 
+    if category.is_empty() {
+        return Response::from_json(&json!({ "alternatives": [] }));
+    }
+
     let db = ctx.env.d1("DB")?;
 
     let (cat_avg, category_id) = if !category.is_empty() {

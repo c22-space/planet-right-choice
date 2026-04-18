@@ -64,9 +64,23 @@ import Marketing from '@/layouts/Marketing.astro'
   const searchInput = document.getElementById('search-input') as HTMLInputElement
   if (search) searchInput.value = search
 
-  document.getElementById('search-form')!.addEventListener('submit', (e) => {
+  document.getElementById('search-form')!.addEventListener('submit', async (e) => {
     e.preventDefault()
     const q = searchInput.value.trim()
+    if (q.startsWith('http')) {
+      const res = await fetch(`${API_BASE}/v1/footprint/from-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: q }),
+      }).catch(() => null)
+      if (res?.ok) {
+        const data = await res.json() as { source: string; product?: { id: number } }
+        if (data.source === 'catalogue' && data.product) {
+          window.location.href = `/product?id=${data.product.id}`
+          return
+        }
+      }
+    }
     const params = new URLSearchParams()
     if (q) params.set('search', q)
     if (category) params.set('category', category)

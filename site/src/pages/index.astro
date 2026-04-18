@@ -14,11 +14,12 @@ import Marketing from '@/layouts/Marketing.astro'
       </p>
 
       <!-- Search bar -->
-      <form action="/catalogue" method="get" class="mx-auto mb-4 flex max-w-xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100">
+      <form id="hero-search" action="/catalogue" method="get" class="mx-auto mb-4 flex max-w-xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-100">
         <input
+          id="hero-input"
           type="text"
           name="search"
-          placeholder="Search products, brands, or categories…"
+          placeholder="Search products, paste an Amazon URL…"
           class="flex-1 bg-transparent px-5 py-4 text-base text-gray-800 placeholder-gray-400 outline-none"
           autofocus
         />
@@ -29,6 +30,7 @@ import Marketing from '@/layouts/Marketing.astro'
           Search
         </button>
       </form>
+      <p id="url-error" class="hidden mb-2 text-sm text-red-500">Product not found in our catalogue yet.</p>
 
       <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
         <a href="/catalogue" class="font-medium text-green-700 hover:underline">Browse all products →</a>
@@ -229,6 +231,46 @@ import Marketing from '@/layouts/Marketing.astro'
 
 <script>
   import { API_BASE } from '@/lib/config'
+
+  // URL paste detection
+  const btn = document.querySelector('#hero-search button[type="submit"]') as HTMLButtonElement
+
+  document.getElementById('hero-search')!.addEventListener('submit', async (e) => {
+    const val = (document.getElementById('hero-input') as HTMLInputElement).value.trim()
+    if (!val.startsWith('http')) return // let normal form submit handle it
+    e.preventDefault()
+    document.getElementById('url-error')!.classList.add('hidden')
+    btn.textContent = 'Loading…'
+    btn.disabled = true
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/footprint/from-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: val }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json() as { source: string; product?: { id: number }; estimate?: { co2eKg: number; tier: number } }
+      if (data.source === 'catalogue' && data.product) {
+        window.location.href = `/product?id=${data.product.id}`
+      } else if (data.estimate) {
+        // Show inline estimate result
+        const co2e = data.estimate.co2eKg?.toFixed(1) ?? '?'
+        const tier = data.estimate.tier ?? '?'
+        document.getElementById('url-error')!.textContent = `Estimated footprint: ~${co2e} kg CO₂e (Tier ${tier} estimate). Not in catalogue yet.`
+        document.getElementById('url-error')!.classList.remove('hidden', 'text-red-500')
+        document.getElementById('url-error')!.classList.add('text-green-700')
+      } else {
+        throw new Error()
+      }
+    } catch {
+      document.getElementById('url-error')!.textContent = 'Could not analyse this URL. Try searching by product name.'
+      document.getElementById('url-error')!.classList.remove('hidden')
+    } finally {
+      btn.textContent = 'Search'
+      btn.disabled = false
+    }
+  })
 
   // Load category chips
   fetch(`${API_BASE}/v1/catalogue/categories`).then(r => r.ok ? r.json() : null).then((data) => {
