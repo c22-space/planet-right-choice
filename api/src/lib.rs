@@ -61,6 +61,8 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         .put_async("/v1/admin/affiliate/rules/:id", routes::admin::affiliate::update_rule)
         .delete_async("/v1/admin/affiliate/rules/:id", routes::admin::affiliate::delete_rule)
         .get_async("/v1/admin/affiliate/stats", routes::admin::affiliate::stats)
+        // Admin — images
+        .post_async("/v1/admin/catalogue/sync-images", routes::admin::fetch_images::sync_images)
         // Impact
         .get_async("/v1/impact/stats", routes::impact::public_stats)
         .post_async("/v1/impact/record", routes::impact::record)
