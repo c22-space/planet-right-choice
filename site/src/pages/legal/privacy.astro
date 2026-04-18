@@ -1,0 +1,73 @@
+---
+export const prerender = true
+import Marketing from '@/layouts/Marketing.astro'
+---
+<Marketing title="Privacy Policy">
+  <div class="mx-auto max-w-3xl px-6 py-24">
+    <h1 class="mb-2 text-4xl font-bold text-gray-900">Privacy Policy</h1>
+    <p class="mb-12 text-sm text-gray-400">Last updated: April 2026</p>
+
+    <div class="prose prose-gray max-w-none space-y-10 text-gray-600 leading-relaxed">
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">1. Who we are</h2>
+        <p>Right Choice is a carbon footprint comparison tool for online shopping, operated by the Conscious Collective Foundation. Questions? Contact us at <a href="mailto:hello@c22.foundation" class="text-green-700 underline underline-offset-2">hello@c22.foundation</a>.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">2. What data we collect</h2>
+        <p>We collect minimal data to operate the service:</p>
+        <ul class="mt-3 list-disc pl-6 space-y-2">
+          <li><strong>Browser extension signals</strong> — when you visit a supported shopping site, the extension sends the page domain, a hashed page URL, and product metadata (name, price, category) to our API to compute a CO₂e estimate. We do not collect your full browsing history.</li>
+          <li><strong>Footprint Protocol detections</strong> — if a seller has published <code>fp:</code> meta tags, we log the domain, hashed URL, and the disclosed CO₂e value for research purposes.</li>
+          <li><strong>Impact events</strong> — when you click a greener alternative we record the CO₂ saving anonymously (no user ID, no IP address stored).</li>
+          <li><strong>Affiliate clicks</strong> — if you click an affiliate link we record the destination domain and a timestamp. No personal data is attached.</li>
+          <li><strong>Search queries</strong> — catalogue searches are logged transiently to return results; they are not stored against any identity.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">3. Affiliate links</h2>
+        <p>Some product links on Right Choice — including links in the browser extension banner and in the catalogue — may be affiliate links. When you click an affiliate link, the retailer may set cookies on your browser and share a commission with us if you purchase. We do not receive your name, email, or payment details from retailers.</p>
+        <p class="mt-3">Affiliate relationships have no influence on carbon scores or the ranking of recommendations.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">4. Cookies and tracking</h2>
+        <p>The Right Choice website itself uses no analytics cookies or third-party trackers. Affiliate partner websites you visit through our links may set their own cookies, governed by their own privacy policies.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">5. How we use the data</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>To return carbon footprint estimates and greener alternatives</li>
+          <li>To display aggregate impact statistics on the homepage (total CO₂ saved)</li>
+          <li>To improve the accuracy of our estimation models</li>
+          <li>To operate and debug the service</li>
+        </ul>
+        <p class="mt-3">We do not sell data to third parties. We do not build individual user profiles.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">6. Data retention</h2>
+        <p>Estimation logs are retained for up to 12 months for model improvement, after which they are deleted or anonymised. Aggregate impact statistics are retained indefinitely.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">7. Your rights</h2>
+        <p>Because we do not link any data to an identified person, most standard data-subject rights (access, erasure, portability) do not apply in practice — there is no personal record to retrieve or delete. If you believe we hold identifiable data about you, contact us and we will investigate.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">8. Changes</h2>
+        <p>We may update this policy at any time. Continued use of Right Choice after changes constitutes acceptance of the updated policy.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">9. Contact</h2>
+        <p>Reach us at <a href="mailto:hello@c22.foundation" class="text-green-700 underline underline-offset-2">hello@c22.foundation</a>.</p>
+      </section>
+
+    </div>
+  </div>
+</Marketing>

@@ -1,0 +1,59 @@
+---
+export const prerender = true
+import Marketing from '@/layouts/Marketing.astro'
+---
+<Marketing title="Terms of Service">
+  <div class="mx-auto max-w-3xl px-6 py-24">
+    <h1 class="mb-2 text-4xl font-bold text-gray-900">Terms of Service</h1>
+    <p class="mb-12 text-sm text-gray-400">Last updated: April 2026</p>
+
+    <div class="prose prose-gray max-w-none space-y-10 text-gray-600 leading-relaxed">
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">1. Acceptance</h2>
+        <p>By using Right Choice (the website at this domain and the browser extension), you agree to these terms. If you do not agree, do not use the service.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">2. What Right Choice does</h2>
+        <p>Right Choice helps you understand the estimated carbon footprint of products. We provide CO₂e scores derived from two sources:</p>
+        <ul class="mt-3 list-disc pl-6 space-y-1">
+          <li><strong>Verified scores</strong> — read directly from Footprint Protocol (<code>fp:</code>) meta tags published by the seller.</li>
+          <li><strong>Estimated scores</strong> — computed using our three-tier estimation protocol based on publicly available emission factors (ecoinvent, Higg MSI, US EPA USEEIO). These are approximations, not certified measurements.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">3. Affiliate links disclosure</h2>
+        <p>Some product links on Right Choice — including links in the browser extension banner and catalogue — may be affiliate links. This means we may earn a small commission if you click through and make a purchase, at no extra cost to you.</p>
+        <p class="mt-3">Affiliate relationships do not influence our carbon scores or the order of recommendations. Products are ranked solely by their CO₂e footprint.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">4. No warranty on scores</h2>
+        <p>Carbon footprint data is inherently uncertain. Estimated scores are provided for informational and comparative purposes only. Right Choice makes no warranty that any score is accurate, complete, or suitable for regulatory or purchasing decisions. Always consult certified lifecycle assessment data for critical decisions.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">5. Acceptable use</h2>
+        <p>You may not use Right Choice to scrape data at scale, reverse-engineer our estimation algorithms for commercial resale, or misrepresent our scores as certified assessments.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">6. Limitation of liability</h2>
+        <p>Right Choice is provided "as is". To the maximum extent permitted by law, we are not liable for any damages arising from your use of or reliance on our carbon scores or product recommendations.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">7. Changes</h2>
+        <p>We may update these terms at any time. Continued use of Right Choice after changes constitutes acceptance of the updated terms.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">8. Contact</h2>
+        <p>Questions? Reach us at <a href="mailto:hello@c22.foundation" class="text-green-700 underline underline-offset-2">hello@c22.foundation</a>.</p>
+      </section>
+
+    </div>
+  </div>
+</Marketing>
