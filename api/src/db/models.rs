@@ -1,14 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub fn resolve_image(mut p: Product) -> Product {
-    if p.image_url.is_none() {
-        if let Some(ref asin) = p.asin {
-            p.image_url = Some(format!(
-                "https://m.media-amazon.com/images/P/{}.01._SL500_.jpg",
-                asin
-            ));
-        }
-    }
+pub fn resolve_image(p: Product) -> Product {
     p
 }
 
