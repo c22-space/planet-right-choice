@@ -1,4 +1,4 @@
-use crate::middleware::auth::{admin_required, api_key_required};
+use crate::middleware::auth::admin_required;
 use serde::Deserialize;
 use serde_json::json;
 use worker::{Request, Response, Result, RouteContext};
@@ -52,10 +52,6 @@ struct ImpactBody {
 
 /// Record an impact event when a user clicks a recommended alternative.
 pub async fn record(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
-    if let Some(r) = api_key_required(&req, &ctx.env)? {
-        return Ok(r);
-    }
-
     let body: ImpactBody = req.json().await?;
 
     if body.alternative_co2e_kg >= body.baseline_co2e_kg {
