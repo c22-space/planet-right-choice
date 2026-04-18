@@ -1,4 +1,4 @@
-use crate::db::models::{Category, Product};
+use crate::db::models::{resolve_image, Category, Product};
 use serde_json::json;
 use worker::{Request, Response, Result, RouteContext};
 
@@ -112,6 +112,7 @@ pub async fn list_products(req: Request, ctx: RouteContext<()>) -> Result<Respon
         }
     };
 
+    let products: Vec<Product> = products.into_iter().map(resolve_image).collect();
     Response::from_json(&json!({
         "data": products,
         "page": page,
@@ -126,14 +127,14 @@ pub async fn get_product(_req: Request, ctx: RouteContext<()>) -> Result<Respons
         .ok_or_else(|| worker::Error::RustError("invalid id".into()))?;
 
     let db = ctx.env.d1("DB")?;
-    let mut rows: Vec<serde_json::Value> = db
+    let mut rows: Vec<Product> = db
         .prepare("SELECT * FROM products WHERE id = ?1 AND is_active = 1 LIMIT 1")
         .bind(&[(id as f64).into()])?
         .all()
         .await?
         .results()?;
 
-    match rows.pop() {
+    match rows.pop().map(resolve_image) {
         Some(p) => Response::from_json(&json!({ "product": p })),
         None => Response::error("Not found", 404),
     }

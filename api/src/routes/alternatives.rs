@@ -1,5 +1,5 @@
 use crate::middleware::auth::api_key_required;
-use crate::db::models::Product;
+use crate::db::models::{resolve_image, Product};
 use crate::services::scoring::{find_alternatives, rank_products};
 use serde_json::json;
 use worker::{Request, Response, Result, RouteContext};
@@ -59,7 +59,7 @@ pub async fn list(req: Request, ctx: RouteContext<()>) -> Result<Response> {
         stmt.bind(&bindings)?.all().await?
     };
 
-    let products: Vec<Product> = results.results()?;
+    let products: Vec<Product> = results.results::<Product>()?.into_iter().map(resolve_image).collect();
     let ranked = rank_products(products, cat_avg);
     let alternatives = find_alternatives(baseline, ranked, limit);
 
@@ -101,7 +101,7 @@ pub async fn by_asin(req: Request, ctx: RouteContext<()>) -> Result<Response> {
         .bind(&[cat_id.into(), asin.clone().into()])?
         .all()
         .await?
-        .results()?;
+        .results::<Product>()?.into_iter().map(resolve_image).collect();
 
     let ranked = rank_products(peers, cat_avg);
     let alternatives = find_alternatives(co2e_kg, ranked, 3);
