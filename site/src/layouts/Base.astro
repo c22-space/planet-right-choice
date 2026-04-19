@@ -11,6 +11,12 @@ const { title, description = 'Shop greener. See the carbon footprint of what you
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta property="og:title" content={`${title} — Right Choice`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-card.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/og-card.jpg" />
     <title>{title} — Right Choice</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
