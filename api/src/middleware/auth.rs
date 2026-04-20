@@ -11,13 +11,8 @@ pub fn verify_api_key(req: &Request, env: &Env) -> Result<bool> {
     Ok(!key.is_empty() && key == secret)
 }
 
-/// Verify an admin JWT from the Cookie header or Cf-Access-Jwt-Assertion.
+/// Verify an admin JWT from the Authorization Bearer header or Cookie.
 pub fn verify_admin(req: &Request, env: &Env) -> Result<bool> {
-    // Cloudflare Access sets this header when configured (production)
-    if req.headers().get("Cf-Access-Jwt-Assertion")?.is_some() {
-        return Ok(true);
-    }
-
     // Accept Authorization: Bearer <token>
     let auth_header = req.headers().get("Authorization")?.unwrap_or_default();
     if let Some(bearer) = auth_header.strip_prefix("Bearer ") {

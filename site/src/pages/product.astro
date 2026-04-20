@@ -21,6 +21,8 @@ import Marketing from '@/layouts/Marketing.astro'
 <script>
   import { API_BASE } from '@/lib/config'
 
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
   const id = new URLSearchParams(location.search).get('id')
   if (!id) window.location.replace('/catalogue')
 
@@ -44,19 +46,19 @@ import Marketing from '@/layouts/Marketing.astro'
     document.getElementById('product-card')!.className = 'mb-10 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm'
     document.getElementById('product-card')!.innerHTML = `
       <div class="flex flex-col gap-6 sm:flex-row">
-        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="h-40 w-40 shrink-0 rounded-xl object-contain bg-gray-50" />` : ''}
+        ${p.image_url ? `<img src="${p.image_url}" alt="${esc(p.name)}" class="h-40 w-40 shrink-0 rounded-xl object-contain bg-gray-50" />` : ''}
         <div class="flex-1">
-          <p class="mb-0.5 text-xs font-medium uppercase tracking-wider text-gray-400">${p.brand}</p>
-          <h1 class="mb-3 text-2xl font-bold text-gray-900">${p.name}</h1>
+          <p class="mb-0.5 text-xs font-medium uppercase tracking-wider text-gray-400">${esc(p.brand)}</p>
+          <h1 class="mb-3 text-2xl font-bold text-gray-900">${esc(p.name)}</h1>
           <div class="mb-4 flex flex-wrap items-center gap-3">
             <span class="text-4xl font-black ${co2eColor(p.co2e_kg)}">${p.co2e_kg.toFixed(1)}<span class="ml-1 text-base font-normal text-gray-400">kg CO₂e</span></span>
             ${sourceBadge(p.co2e_source)}
           </div>
           <div class="flex flex-wrap gap-2 text-xs text-gray-500">
-            ${p.co2e_scope ? `<span class="rounded bg-gray-100 px-2 py-1">Scope: ${p.co2e_scope}</span>` : ''}
+            ${p.co2e_scope ? `<span class="rounded bg-gray-100 px-2 py-1">Scope: ${esc(p.co2e_scope)}</span>` : ''}
             ${p.weight_kg ? `<span class="rounded bg-gray-100 px-2 py-1">Weight: ${p.weight_kg} kg</span>` : ''}
-            ${p.origin_country ? `<span class="rounded bg-gray-100 px-2 py-1">Origin: ${p.origin_country}</span>` : ''}
-            ${certs.map((c: string) => `<span class="rounded bg-blue-50 px-2 py-1 text-blue-600">${c}</span>`).join('')}
+            ${p.origin_country ? `<span class="rounded bg-gray-100 px-2 py-1">Origin: ${esc(p.origin_country)}</span>` : ''}
+            ${certs.map((c: string) => `<span class="rounded bg-blue-50 px-2 py-1 text-blue-600">${esc(c)}</span>`).join('')}
           </div>
           ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-green-700 hover:underline">View product page →</a>` : ''}
         </div>
@@ -75,8 +77,8 @@ import Marketing from '@/layouts/Marketing.astro'
     document.getElementById('alternatives-grid')!.innerHTML = alts.map(a => `
       <a href="/product?id=${a.id}" class="group flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-green-200 hover:shadow-md">
         ${a.image_url ? `<img src="${a.image_url}" alt="${a.name}" class="mb-3 h-24 w-full rounded-xl object-contain bg-gray-50" loading="lazy" />` : '<div class="mb-3 h-24 w-full rounded-xl bg-gray-50"></div>'}
-        <p class="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">${a.brand}</p>
-        <h3 class="mb-2 flex-1 text-sm font-semibold text-gray-900 group-hover:text-green-700">${a.name}</h3>
+        <p class="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-400">${esc(a.brand)}</p>
+        <h3 class="mb-2 flex-1 text-sm font-semibold text-gray-900 group-hover:text-green-700">${esc(a.name)}</h3>
         <div class="flex items-baseline gap-1">
           <span class="text-lg font-black ${co2eColor(a.co2e_kg)}">${a.co2e_kg.toFixed(1)}</span>
           <span class="text-xs text-gray-400">kg CO₂e</span>

@@ -213,7 +213,7 @@ function render(shadow: ShadowRoot, data: BannerData): void {
       ${alternatives
         .map(
           (alt, idx) => `
-        <a class="alt-card" href="${alt.product.url ?? '#'}" data-idx="${idx}" data-id="${alt.product.id}" target="_blank" rel="noopener">
+        <a class="alt-card" href="${safeUrl(alt.product.url)}" data-idx="${idx}" data-id="${alt.product.id}" target="_blank" rel="noopener">
           ${alt.product.imageUrl ? `<img class="alt-img" src="${alt.product.imageUrl}" alt="" loading="lazy" />` : '<div class="alt-img"></div>'}
           <div class="alt-info">
             <div class="alt-name">${escapeHtml(alt.product.name)}</div>
@@ -249,6 +249,16 @@ function render(shadow: ShadowRoot, data: BannerData): void {
         })
       })
     })
+  }
+}
+
+function safeUrl(url: string | null | undefined): string {
+  if (!url) return '#'
+  try {
+    const u = new URL(url)
+    return u.protocol === 'https:' || u.protocol === 'http:' ? url : '#'
+  } catch {
+    return '#'
   }
 }
 

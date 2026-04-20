@@ -18,6 +18,7 @@ import Admin from '@/layouts/Admin.astro'
   if (!token) { window.location.href = '/admin/login'; throw 0 }
 
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   const tab = new URLSearchParams(location.search).get('tab') ?? 'rules'
 
   const activeClass = 'bg-gray-700 text-white'
@@ -51,12 +52,12 @@ import Admin from '@/layouts/Admin.astro'
                 <tbody class="divide-y divide-gray-800 bg-gray-900">
                   ${rules.length ? rules.map(r => `
                     <tr class="hover:bg-gray-800/40">
-                      <td class="px-4 py-3 font-mono text-xs text-gray-200">${r.source_asin}</td>
-                      <td class="px-4 py-3 font-mono text-xs text-gray-400">${r.target_asin ?? '—'}</td>
-                      <td class="px-4 py-3 text-xs text-gray-400">${r.affiliate_tag}</td>
+                      <td class="px-4 py-3 font-mono text-xs text-gray-200">${esc(r.source_asin)}</td>
+                      <td class="px-4 py-3 font-mono text-xs text-gray-400">${esc(r.target_asin ?? '—')}</td>
+                      <td class="px-4 py-3 text-xs text-gray-400">${esc(r.affiliate_tag)}</td>
                       <td class="px-4 py-3 text-gray-400">${r.priority}</td>
                       <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-medium ${r.is_active ? 'bg-green-900/40 text-green-300' : 'bg-gray-800 text-gray-500'}">${r.is_active ? 'Active' : 'Inactive'}</span></td>
-                      <td class="max-w-32 truncate px-4 py-3 text-xs text-gray-500">${r.reason ?? '—'}</td>
+                      <td class="max-w-32 truncate px-4 py-3 text-xs text-gray-500">${esc(r.reason ?? '—')}</td>
                       <td class="px-4 py-3"><a href="/admin/affiliate/edit?id=${r.id}" class="text-xs text-green-400 hover:text-green-300">Edit</a></td>
                     </tr>
                   `).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500">No rules yet.</td></tr>'}

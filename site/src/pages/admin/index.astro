@@ -46,6 +46,7 @@ import Admin from '@/layouts/Admin.astro'
   if (!token) { window.location.href = '/admin/login'; throw 0 }
 
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
   async function load() {
     const [detectRes, estRes] = await Promise.all([
@@ -98,8 +99,8 @@ import Admin from '@/layouts/Admin.astro'
         ${recent.length ? recent.map(e => `
           <div class="flex items-start justify-between gap-2">
             <div class="min-w-0">
-              <p class="truncate text-sm text-gray-200">${e.product_name ?? 'Unknown product'}</p>
-              <p class="text-xs text-gray-500">${e.domain}</p>
+              <p class="truncate text-sm text-gray-200">${esc(e.product_name ?? 'Unknown product')}</p>
+              <p class="text-xs text-gray-500">${esc(e.domain)}</p>
             </div>
             <div class="flex shrink-0 items-center gap-2">
               <span class="rounded bg-gray-800 px-1.5 py-0.5 text-xs text-gray-300">${e.estimated_co2e_kg} kg</span>
@@ -112,8 +113,9 @@ import Admin from '@/layouts/Admin.astro'
   }
 
   load().catch(err => {
-    document.getElementById('content')!.insertAdjacentHTML('afterbegin', `
-      <div class="mb-6 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300">${err}</div>
-    `)
+    const errEl = document.createElement('div')
+    errEl.className = 'mb-6 rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300'
+    errEl.textContent = String(err)
+    document.getElementById('content')!.prepend(errEl)
   })
 </script>

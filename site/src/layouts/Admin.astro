@@ -63,14 +63,14 @@ const { title } = Astro.props
   })
 
   // Auth guard
-  const token = localStorage.getItem('admin_token')
+  const token = sessionStorage.getItem('admin_token')
   if (!token && !window.location.pathname.includes('/admin/login')) {
     window.location.href = '/admin/login'
   }
 
   // Sign out
   document.getElementById('signout-btn')?.addEventListener('click', () => {
-    localStorage.removeItem('admin_token')
+    sessionStorage.removeItem('admin_token')
     window.location.href = '/admin/login'
   })
 </script>

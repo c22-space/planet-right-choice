@@ -53,8 +53,8 @@ export default defineConfig({
       },
     },
     target: 'es2022',
-    sourcemap: true,
-    minify: false, // keep readable for extension review
+    sourcemap: false,
+    minify: true,
   },
   plugins: [extensionPlugin((process.env['BROWSER'] as 'chrome' | 'firefox') ?? 'chrome')],
   resolve: {

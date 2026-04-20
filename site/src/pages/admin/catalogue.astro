@@ -23,6 +23,7 @@ import Admin from '@/layouts/Admin.astro'
   if (!token) { window.location.href = '/admin/login'; throw 0 }
 
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
   let currentPage = parseInt(new URLSearchParams(location.search).get('page') ?? '1', 10)
 
@@ -57,8 +58,8 @@ import Admin from '@/layouts/Admin.astro'
           <tbody class="divide-y divide-gray-800 bg-gray-900">
             ${data.map(p => `
               <tr class="hover:bg-gray-800/40">
-                <td class="px-4 py-3 font-medium text-gray-200">${p.name}</td>
-                <td class="px-4 py-3 text-gray-400">${p.brand ?? '—'}</td>
+                <td class="px-4 py-3 font-medium text-gray-200">${esc(p.name)}</td>
+                <td class="px-4 py-3 text-gray-400">${esc(p.brand ?? '—')}</td>
                 <td class="px-4 py-3 text-gray-300">${p.co2e_kg != null ? `${p.co2e_kg} <span class="text-gray-500 text-xs">kg</span>` : '<span class="text-gray-600">—</span>'}</td>
                 <td class="px-4 py-3">${p.co2e_source ? `<span class="rounded-full px-2 py-0.5 text-xs font-medium ${sourceBadge(p.co2e_source)}">${p.co2e_source}</span>` : ''}</td>
                 <td class="px-4 py-3 text-gray-400">${p.origin_country ?? '—'}</td>

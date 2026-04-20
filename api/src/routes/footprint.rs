@@ -26,7 +26,9 @@ pub async fn parse(mut req: Request, ctx: RouteContext<()>) -> Result<Response> 
     if let Some(r) = api_key_required(&req, &ctx.env)? {
         return Ok(r);
     }
-
+    if req.headers().get("content-length")?.map(|v| v.parse::<usize>().unwrap_or(0)).unwrap_or(0) > 2_000_000 {
+        return Response::error("Payload too large", 413);
+    }
     let body: ParseBody = req.json().await?;
 
     // Try from raw tags first, then HTML snippet
@@ -64,6 +66,12 @@ pub async fn parse(mut req: Request, ctx: RouteContext<()>) -> Result<Response> 
 }
 
 pub async fn estimate(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    if let Some(r) = api_key_required(&req, &ctx.env)? {
+        return Ok(r);
+    }
+    if req.headers().get("content-length")?.map(|v| v.parse::<usize>().unwrap_or(0)).unwrap_or(0) > 2_000_000 {
+        return Response::error("Payload too large", 413);
+    }
     let body: EstimateBody = req.json().await?;
 
     let session_id = body.signals.session_id.clone();
@@ -184,10 +192,30 @@ struct FromUrlBody {
     url: String,
 }
 
+fn is_safe_url(url: &str) -> bool {
+    let Ok(parsed) = url::Url::parse(url) else { return false };
+    if parsed.scheme() != "https" { return false }
+    let host = parsed.host_str().unwrap_or("");
+    if host.is_empty() { return false }
+    let blocked = ["localhost", "127.", "10.", "192.168.", "169.254.", "0.", "::1", "fc", "fd"];
+    if blocked.iter().any(|b| host.starts_with(b)) { return false }
+    // Block 172.16.0.0/12
+    if host.starts_with("172.") {
+        if let Some(second) = host.split('.').nth(1).and_then(|s| s.parse::<u8>().ok()) {
+            if (16..=31).contains(&second) { return false }
+        }
+    }
+    true
+}
+
 /// Public: accepts any product URL, checks catalogue then estimates.
 pub async fn from_url(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
     let body: FromUrlBody = req.json().await?;
     let url = body.url.trim().to_string();
+
+    if !is_safe_url(&url) {
+        return Response::error("Invalid or disallowed URL", 422);
+    }
 
     let db = ctx.env.d1("DB")?;
 
@@ -206,7 +234,7 @@ pub async fn from_url(mut req: Request, ctx: RouteContext<()>) -> Result<Respons
     // 2. Fetch the page and extract signals
     let fetch_req = Request::new(&url, worker::Method::Get)?;
     let mut page_resp = Fetch::Request(fetch_req).send().await
-        .map_err(|e| worker::Error::RustError(format!("fetch failed: {e}")))?;
+        .map_err(|_| worker::Error::RustError("Could not fetch the product page".into()))?;
 
     if page_resp.status_code() >= 400 {
         return Response::error("Could not fetch the product page", 422);
