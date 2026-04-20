@@ -1,0 +1,133 @@
+---
+import Admin from '@/layouts/Admin.astro'
+---
+<Admin title="Edit Affiliate Rule">
+  <div class="mx-auto max-w-lg">
+    <a href="/admin/affiliate" class="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-300">← Back to affiliate</a>
+
+    <div id="error-box" class="mb-4 hidden rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300"></div>
+    <div id="loading" class="py-16 text-center text-sm text-gray-500">Loading…</div>
+
+    <form id="rule-form" class="hidden space-y-5 rounded-xl border border-gray-800 bg-gray-900 p-6">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="source_asin">Source ASIN *</label>
+        <input type="text" id="source_asin" required class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 font-mono text-sm text-gray-100 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="target_asin">Target ASIN</label>
+        <input type="text" id="target_asin" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 font-mono text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="affiliate_tag">Affiliate tag</label>
+        <input type="text" id="affiliate_tag" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="priority">Priority</label>
+        <input type="number" id="priority" value="0" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="reason">Reason / note</label>
+        <input type="text" id="reason" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <div class="flex gap-3">
+          <button type="submit" id="submit-btn" class="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">Save changes</button>
+          <a href="/admin/affiliate" class="rounded-lg border border-gray-700 px-5 py-2 text-sm font-medium text-gray-400 hover:border-gray-600">Cancel</a>
+        </div>
+        <button type="button" id="delete-btn" class="rounded-lg border border-red-800 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/20">Delete rule</button>
+      </div>
+    </form>
+  </div>
+</Admin>
+
+<script>
+  import { API_BASE } from '@/lib/config'
+
+  const token = sessionStorage.getItem('admin_token')
+  if (!token) { window.location.href = '/admin/login'; throw 0 }
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+
+  const id = new URLSearchParams(location.search).get('id')
+  if (!id) { window.location.href = '/admin/affiliate'; throw 0 }
+
+  const errorBox = document.getElementById('error-box') as HTMLDivElement
+  const form = document.getElementById('rule-form') as HTMLFormElement
+  const loading = document.getElementById('loading') as HTMLDivElement
+
+  function setVal(elId: string, value: string | number | null) {
+    const el = document.getElementById(elId) as HTMLInputElement
+    if (el && value != null) el.value = String(value)
+  }
+
+  async function load() {
+    const res = await fetch(`${API_BASE}/v1/admin/affiliate/rules`, { headers })
+    if (!res.ok) throw new Error(`API error ${res.status}`)
+    type Rule = { id: number; source_asin: string; target_asin: string | null; affiliate_tag: string; reason: string | null; priority: number }
+    const { rules }: { rules: Rule[] } = await res.json()
+    const rule = rules.find(r => String(r.id) === id)
+    if (!rule) throw new Error('Rule not found')
+
+    setVal('source_asin', rule.source_asin)
+    setVal('target_asin', rule.target_asin)
+    setVal('affiliate_tag', rule.affiliate_tag)
+    setVal('priority', rule.priority)
+    setVal('reason', rule.reason)
+
+    loading.classList.add('hidden')
+    form.classList.remove('hidden')
+  }
+
+  load().catch((err) => {
+    loading.classList.add('hidden')
+    errorBox.textContent = String(err)
+    errorBox.classList.remove('hidden')
+  })
+
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errorBox.classList.add('hidden')
+    submitBtn.textContent = 'Saving…'
+    submitBtn.disabled = true
+
+    const val = (elId: string) => (document.getElementById(elId) as HTMLInputElement).value.trim()
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/admin/affiliate/rules/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          source_asin: val('source_asin'),
+          target_asin: val('target_asin') || null,
+          affiliate_tag: val('affiliate_tag') || null,
+          priority: parseInt(val('priority') || '0', 10),
+          reason: val('reason') || null,
+        }),
+      })
+      if (!res.ok) throw new Error(`API error ${res.status}`)
+      window.location.href = '/admin/affiliate'
+    } catch (err) {
+      errorBox.textContent = String(err)
+      errorBox.classList.remove('hidden')
+      submitBtn.textContent = 'Save changes'
+      submitBtn.disabled = false
+    }
+  })
+
+  document.getElementById('delete-btn')?.addEventListener('click', async () => {
+    if (!confirm('Delete this rule? It will be deactivated.')) return
+    try {
+      const res = await fetch(`${API_BASE}/v1/admin/affiliate/rules/${id}`, { method: 'DELETE', headers })
+      if (!res.ok) throw new Error(`API error ${res.status}`)
+      window.location.href = '/admin/affiliate'
+    } catch (err) {
+      errorBox.textContent = String(err)
+      errorBox.classList.remove('hidden')
+    }
+  })
+</script>

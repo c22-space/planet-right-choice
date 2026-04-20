@@ -154,6 +154,17 @@
           <input type="checkbox" id="toggle-sharing" checked />
         </div>
       </section>
+      <section>
+        <div class="section-title" style="margin-bottom:8px">API key</div>
+        <input
+          type="password"
+          id="api-key-input"
+          placeholder="Paste your API key"
+          style="width:100%;border:1px solid #e5e7eb;border-radius:6px;padding:5px 8px;font-size:12px;font-family:monospace;color:#111827;background:#f9fafb;box-sizing:border-box"
+        />
+        <button id="save-api-key" style="margin-top:6px;width:100%;padding:5px;border:none;border-radius:6px;background:#16a34a;color:#fff;font-size:11px;font-weight:600;cursor:pointer">Save</button>
+        <p id="api-key-status" style="margin-top:4px;font-size:10px;color:#9ca3af;display:none"></p>
+      </section>
     </div>
 
     <script type="module" src="popup.js"></script>

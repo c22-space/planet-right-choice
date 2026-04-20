@@ -1,0 +1,152 @@
+---
+import Admin from '@/layouts/Admin.astro'
+---
+<Admin title="New Product">
+  <div class="mx-auto max-w-2xl">
+    <a href="/admin/catalogue" class="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-300">← Back to catalogue</a>
+
+    <div id="error-box" class="mb-4 hidden rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300"></div>
+
+    <form id="product-form" class="space-y-5 rounded-xl border border-gray-800 bg-gray-900 p-6">
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="name">Name *</label>
+          <input type="text" id="name" required class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="brand">Brand *</label>
+          <input type="text" id="brand" required class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="category_id">Category *</label>
+        <select id="category_id" required class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none">
+          <option value="">Loading…</option>
+        </select>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-3">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="co2e_kg">CO₂e (kg) *</label>
+          <input type="number" id="co2e_kg" step="0.01" min="0" required class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="co2e_scope">Scope</label>
+          <select id="co2e_scope" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none">
+            <option value="lifecycle">Lifecycle</option>
+            <option value="cradle-to-gate">Cradle-to-gate</option>
+            <option value="use-phase">Use phase</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="co2e_source">Source</label>
+          <select id="co2e_source" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none">
+            <option value="estimated">Estimated</option>
+            <option value="certified">Certified</option>
+            <option value="manual">Manual</option>
+            <option value="fp_tag">fp: tag</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="weight_kg">Weight (kg)</label>
+          <input type="number" id="weight_kg" step="0.001" min="0" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-gray-300" for="origin_country">Origin country (ISO)</label>
+          <input type="text" id="origin_country" maxlength="2" placeholder="US" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="asin">Amazon ASIN</label>
+        <input type="text" id="asin" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="url">Product URL</label>
+        <input type="url" id="url" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="image_url">Image URL</label>
+        <input type="url" id="image_url" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="certifications">Certifications (comma-separated)</label>
+        <input type="text" id="certifications" placeholder="GOTS, B-Corp, Fair Trade" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" />
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit" id="submit-btn" class="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">Create product</button>
+        <a href="/admin/catalogue" class="rounded-lg border border-gray-700 px-5 py-2 text-sm font-medium text-gray-400 hover:border-gray-600">Cancel</a>
+      </div>
+    </form>
+  </div>
+</Admin>
+
+<script>
+  import { API_BASE } from '@/lib/config'
+
+  const token = sessionStorage.getItem('admin_token')
+  if (!token) { window.location.href = '/admin/login'; throw 0 }
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+
+  async function loadCategories() {
+    const res = await fetch(`${API_BASE}/v1/catalogue/categories`)
+    const { categories } = await res.json() as { categories: { id: number; slug: string; name: string }[] }
+    const sel = document.getElementById('category_id') as HTMLSelectElement
+    sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.name} (${c.slug})</option>`).join('')
+  }
+  loadCategories().catch(() => {})
+
+  const form = document.getElementById('product-form') as HTMLFormElement
+  const errorBox = document.getElementById('error-box') as HTMLDivElement
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errorBox.classList.add('hidden')
+    submitBtn.textContent = 'Saving…'
+    submitBtn.disabled = true
+
+    const val = (id: string) => (document.getElementById(id) as HTMLInputElement).value.trim()
+    const num = (id: string) => { const v = val(id); return v ? parseFloat(v) : null }
+
+    const certStr = val('certifications')
+    const certifications = certStr ? certStr.split(',').map(s => s.trim()).filter(Boolean) : []
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/admin/catalogue/products`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          name: val('name'),
+          brand: val('brand'),
+          category_id: parseInt((document.getElementById('category_id') as HTMLSelectElement).value, 10),
+          asin: val('asin') || null,
+          url: val('url') || null,
+          image_url: val('image_url') || null,
+          co2e_kg: num('co2e_kg'),
+          co2e_scope: val('co2e_scope'),
+          co2e_source: val('co2e_source'),
+          co2e_confidence: 0.5,
+          weight_kg: num('weight_kg'),
+          origin_country: val('origin_country') || null,
+          certifications,
+        }),
+      })
+      if (!res.ok) throw new Error(`API error ${res.status}`)
+      window.location.href = '/admin/catalogue'
+    } catch (err) {
+      errorBox.textContent = String(err)
+      errorBox.classList.remove('hidden')
+      submitBtn.textContent = 'Create product'
+      submitBtn.disabled = false
+    }
+  })
+</script>

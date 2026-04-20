@@ -57,7 +57,7 @@ import Admin from '@/layouts/Admin.astro'
                       <td class="px-4 py-3 text-gray-400">${r.priority}</td>
                       <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-medium ${r.is_active ? 'bg-green-900/40 text-green-300' : 'bg-gray-800 text-gray-500'}">${r.is_active ? 'Active' : 'Inactive'}</span></td>
                       <td class="max-w-32 truncate px-4 py-3 text-xs text-gray-500">${r.reason ?? '—'}</td>
-                      <td class="px-4 py-3"><a href="/admin/affiliate/${r.id}" class="text-xs text-green-400 hover:text-green-300">Edit</a></td>
+                      <td class="px-4 py-3"><a href="/admin/affiliate/edit?id=${r.id}" class="text-xs text-green-400 hover:text-green-300">Edit</a></td>
                     </tr>
                   `).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500">No rules yet.</td></tr>'}
                 </tbody>

@@ -1,0 +1,86 @@
+---
+import Admin from '@/layouts/Admin.astro'
+---
+<Admin title="New Affiliate Rule">
+  <div class="mx-auto max-w-lg">
+    <a href="/admin/affiliate" class="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-300">← Back to affiliate</a>
+
+    <div id="error-box" class="mb-4 hidden rounded-xl bg-red-900/20 border border-red-800 px-4 py-3 text-sm text-red-300"></div>
+
+    <form id="rule-form" class="space-y-5 rounded-xl border border-gray-800 bg-gray-900 p-6">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="source_asin">Source ASIN *</label>
+        <input type="text" id="source_asin" required class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 font-mono text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" placeholder="B08N5WRWNW" />
+        <p class="mt-1 text-xs text-gray-500">The ASIN to intercept when the user visits Amazon.</p>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="target_asin">Target ASIN</label>
+        <input type="text" id="target_asin" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 font-mono text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" placeholder="Leave blank to use same ASIN with tag only" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="affiliate_tag">Affiliate tag</label>
+        <input type="text" id="affiliate_tag" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" placeholder="Uses default tag if blank" />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="priority">Priority</label>
+        <input type="number" id="priority" value="0" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:border-green-500 focus:outline-none" />
+        <p class="mt-1 text-xs text-gray-500">Higher number wins when multiple rules match.</p>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-gray-300" for="reason">Reason / note</label>
+        <input type="text" id="reason" class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-green-500 focus:outline-none" placeholder="Why this rule exists" />
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit" id="submit-btn" class="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">Create rule</button>
+        <a href="/admin/affiliate" class="rounded-lg border border-gray-700 px-5 py-2 text-sm font-medium text-gray-400 hover:border-gray-600">Cancel</a>
+      </div>
+    </form>
+  </div>
+</Admin>
+
+<script>
+  import { API_BASE } from '@/lib/config'
+
+  const token = sessionStorage.getItem('admin_token')
+  if (!token) { window.location.href = '/admin/login'; throw 0 }
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+
+  const form = document.getElementById('rule-form') as HTMLFormElement
+  const errorBox = document.getElementById('error-box') as HTMLDivElement
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errorBox.classList.add('hidden')
+    submitBtn.textContent = 'Saving…'
+    submitBtn.disabled = true
+
+    const val = (id: string) => (document.getElementById(id) as HTMLInputElement).value.trim()
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/admin/affiliate/rules`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          source_asin: val('source_asin'),
+          target_asin: val('target_asin') || null,
+          affiliate_tag: val('affiliate_tag') || null,
+          priority: parseInt(val('priority') || '0', 10),
+          reason: val('reason') || null,
+        }),
+      })
+      if (!res.ok) throw new Error(`API error ${res.status}`)
+      window.location.href = '/admin/affiliate'
+    } catch (err) {
+      errorBox.textContent = String(err)
+      errorBox.classList.remove('hidden')
+      submitBtn.textContent = 'Create rule'
+      submitBtn.disabled = false
+    }
+  })
+</script>

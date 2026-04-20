@@ -20,7 +20,7 @@ async function main(): Promise<void> {
     mainView.classList.add('active')
   })
 
-  const { showBanner, dataSharing } = await getMultiple(['showBanner', 'dataSharing'])
+  const { showBanner, dataSharing, apiKey } = await getMultiple(['showBanner', 'dataSharing', 'apiKey'])
 
   // Settings toggles
   const bannerToggle = document.getElementById('toggle-banner') as HTMLInputElement
@@ -33,6 +33,18 @@ async function main(): Promise<void> {
   sharingToggle.checked = dataSharing
   sharingToggle.addEventListener('change', () => {
     setStorage('dataSharing', sharingToggle.checked)
+  })
+
+  // API key
+  const apiKeyInput = document.getElementById('api-key-input') as HTMLInputElement
+  const saveApiKeyBtn = document.getElementById('save-api-key') as HTMLButtonElement
+  const apiKeyStatus = document.getElementById('api-key-status') as HTMLParagraphElement
+  if (apiKey) apiKeyInput.value = apiKey
+  saveApiKeyBtn.addEventListener('click', async () => {
+    await setStorage('apiKey', apiKeyInput.value.trim())
+    apiKeyStatus.textContent = 'Saved.'
+    apiKeyStatus.style.display = 'block'
+    setTimeout(() => { apiKeyStatus.style.display = 'none' }, 2000)
   })
 
   // Poll storage until the service worker writes a result (up to 8s)

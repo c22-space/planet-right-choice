@@ -22,6 +22,17 @@ ENVIRONMENT = "development"
 
 [env.production]
 name = "planet-right-choice-api-production"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "planet-right-choice"
+database_id = "b47e8465-9984-4d34-a1c2-f6b35d53425d"
+migrations_dir = "src/migrations"
+
+[[env.production.r2_buckets]]
+binding = "ASSETS"
+bucket_name = "planet-right-choice-assets"
+
 [env.production.vars]
 AFFILIATE_TAG = ""
 ENVIRONMENT = "production"

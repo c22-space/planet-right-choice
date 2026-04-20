@@ -122,7 +122,7 @@ async function handleFpDetected(
     sessionId: SESSION_ID,
     domain: signals.domain,
     pageUrlHash: signals.pageUrlHash,
-  }).catch(() => {})
+  }).catch((err) => console.error('[RightChoice] postFpDetection failed:', err))
 
   // Fetch alternatives
   let alternatives: ScoredAlternative[] = []
@@ -161,7 +161,10 @@ async function handleEstimateRequested(
   incrementScanCount().catch(() => {})
   const { signals } = msg
 
-  const result = await postEstimate({ signals })
+  const result = await postEstimate({ signals }).catch((err) => {
+    console.error('[RightChoice] postEstimate failed:', err)
+    return null
+  })
 
   if (!result) {
     await updatePageStatus(tabId, {
@@ -172,6 +175,7 @@ async function handleEstimateRequested(
       co2eKg: null,
       source: null,
     })
+    chrome.tabs.sendMessage(tabId, { type: 'ESTIMATE_FAILED' }).catch(() => {})
     return
   }
 

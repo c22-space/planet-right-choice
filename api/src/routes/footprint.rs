@@ -63,9 +63,34 @@ pub async fn parse(mut req: Request, ctx: RouteContext<()>) -> Result<Response> 
     Response::from_json(&json!({ "product": product }))
 }
 
-pub async fn estimate(mut req: Request, _ctx: RouteContext<()>) -> Result<Response> {
+pub async fn estimate(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
     let body: EstimateBody = req.json().await?;
+
+    let session_id = body.signals.session_id.clone();
+    let domain = body.signals.domain.clone();
+    let page_url_hash = body.signals.page_url_hash.clone();
+    let product_name = body.signals.product_name.clone().unwrap_or_default();
+
     let result = run_estimate(body.signals);
+
+    let db = ctx.env.d1("DB")?;
+    let _ = db
+        .prepare(
+            "INSERT INTO estimations (session_id, domain, page_url_hash, product_name, signals, estimated_co2e_kg, confidence, tier, method_version)
+             VALUES (?1, ?2, ?3, ?4, '{}', ?5, ?6, ?7, ?8)",
+        )
+        .bind(&[
+            session_id.into(),
+            domain.into(),
+            page_url_hash.into(),
+            product_name.into(),
+            result.estimated_co2e_kg.into(),
+            result.confidence.into(),
+            (result.tier as i64 as f64).into(),
+            result.method_version.clone().into(),
+        ])?
+        .run()
+        .await;
 
     Response::from_json(&json!({ "result": result }))
 }
@@ -110,12 +135,33 @@ fn extract_signals(html: &str, url: &str) -> EstimationInput {
         .and_then(|u| u.host_str().map(|h| h.to_string()))
         .unwrap_or_default();
 
-    // Simple breadcrumb from og:description or JSON-LD @type
     let description = meta("og:description").or_else(|| meta("description"));
-    let category_breadcrumb = description
-        .as_deref()
-        .map(|_| vec![])
-        .unwrap_or_default();
+
+    // Try JSON-LD BreadcrumbList first, then fall back to description as a hint
+    let category_breadcrumb = {
+        let mut crumbs: Vec<String> = vec![];
+
+        if let Ok(re) = regex_lite::Regex::new(
+            r#"(?s)"@type"\s*:\s*"BreadcrumbList".*?"itemListElement"\s*:\s*\[([^\]]+)\]"#,
+        ) {
+            if let Some(cap) = re.captures(html) {
+                if let Ok(name_re) = regex_lite::Regex::new(r#""name"\s*:\s*"([^"]+)""#) {
+                    crumbs = name_re
+                        .captures_iter(&cap[1])
+                        .map(|c| c[1].to_string())
+                        .collect();
+                }
+            }
+        }
+
+        if crumbs.is_empty() {
+            if let Some(desc) = description.as_deref() {
+                crumbs = vec![desc.split_whitespace().take(10).collect::<Vec<_>>().join(" ")];
+            }
+        }
+
+        crumbs
+    };
 
     EstimationInput {
         product_name,
