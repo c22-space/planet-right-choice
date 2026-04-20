@@ -37,7 +37,7 @@ import Marketing from '@/layouts/Marketing.astro'
     }
 
     type Product = { id: number; name: string; brand: string; co2e_kg: number; co2e_source: string; co2e_scope: string | null; certifications: string | null; weight_kg: number | null; origin_country: string | null; url: string | null; image_url: string | null }
-    const { product: p }: { product: Product } = await res.json()
+    const { product: p, category_slug }: { product: Product; category_slug: string } = await res.json()
     const certs: string[] = (() => { try { return JSON.parse(p.certifications ?? '[]') } catch { return [] } })()
 
     document.title = `${p.name} — Right Choice`
@@ -63,12 +63,12 @@ import Marketing from '@/layouts/Marketing.astro'
       </div>
     `
 
-    // Load greener alternatives from catalogue (lowest co2e, excluding this product)
-    const altData = await fetch(`${API_BASE}/v1/catalogue/products?pageSize=10`)
+    // Load greener alternatives within the same category
+    if (!category_slug) return
+    const altData = await fetch(`${API_BASE}/v1/catalogue/alternatives?category=${encodeURIComponent(category_slug)}&baselineCo2eKg=${p.co2e_kg}&limit=3`)
     if (!altData.ok) return
     type AltProduct = { id: number; name: string; brand: string; co2e_kg: number; co2e_source: string; image_url: string | null }
-    const { data }: { data: AltProduct[] } = await altData.json()
-    const alts = data.filter(a => a.id !== p.id && a.co2e_kg < p.co2e_kg).slice(0, 3)
+    const { alternatives: alts }: { alternatives: AltProduct[] } = await altData.json()
     if (alts.length === 0) return
 
     document.getElementById('alternatives-section')!.classList.remove('hidden')

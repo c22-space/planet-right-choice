@@ -127,15 +127,24 @@ pub async fn get_product(_req: Request, ctx: RouteContext<()>) -> Result<Respons
         .ok_or_else(|| worker::Error::RustError("invalid id".into()))?;
 
     let db = ctx.env.d1("DB")?;
-    let mut rows: Vec<Product> = db
-        .prepare("SELECT * FROM products WHERE id = ?1 AND is_active = 1 LIMIT 1")
+    let row = db
+        .prepare(
+            "SELECT p.*, c.slug as category_slug FROM products p
+             JOIN categories c ON p.category_id = c.id
+             WHERE p.id = ?1 AND p.is_active = 1 LIMIT 1",
+        )
         .bind(&[(id as f64).into()])?
-        .all()
-        .await?
-        .results()?;
+        .first::<serde_json::Value>(None)
+        .await?;
 
-    match rows.pop().map(resolve_image) {
-        Some(p) => Response::from_json(&json!({ "product": p })),
+    match row {
+        Some(val) => {
+            let product: Product = serde_json::from_value(val.clone())
+                .map_err(|e| worker::Error::RustError(e.to_string()))?;
+            let product = resolve_image(product);
+            let category_slug = val["category_slug"].as_str().unwrap_or("").to_string();
+            Response::from_json(&json!({ "product": product, "category_slug": category_slug }))
+        }
         None => Response::error("Not found", 404),
     }
 }
